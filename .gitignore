@@ -9,9 +9,10 @@ lerna-debug.log*
 
 node_modules
 node_modules_linux
-package_lock.json
-package_lock_linux.json
-package_lock-Curo.json
+package-lock.json
+package-lock_linux.json
+package-lock-Curo.json
+# LMAO
 .DS_Store
 dist
 dist-ssr
