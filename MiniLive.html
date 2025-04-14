@@ -127,7 +127,6 @@
         }
     </style>
 </head>
-<script src="src/controller.ts" type="module"></script>
 <body>
 <!--<figure id="loadingSpinner">-->
 <!--    <strong>MiniMates: loading...</strong>-->
@@ -140,25 +139,26 @@
 <button onclick="handleClick()" style="position: fixed; top: 20px; right: 20px;">
     TEST
 </button>
-<button onclick="test()" style="position: fixed; top: 60px; right: 20px;">
+<button onclick="myTest()" style="position: fixed; top: 60px; right: 20px;">
     TEST_SAMPLE
 </button>
-<script>
-    async function test() {
-        console.log("test");
+<script type="module">
+    import DigitalHuman from './src/dh_helper/controller.js'
+
+    async function myTest() {
+
+      if (window.Module) {
+        console.log("Module存在:", window.Module);
+      } else {
+        console.log("Module未定义");
+      }
+      console.log("test");
         const response = await fetch("/test.wav");
         const arrayBuffer = await response.arrayBuffer(); // 获取 ArrayBuffer
-        const view = new Uint8Array(arrayBuffer);
-        const arrayBufferPtr = parent.Module._malloc(arrayBuffer.byteLength);
-        console.log("arrayBufferPtr", arrayBufferPtr.toString());
-        console.log("view", view);
-
-        parent.Module.HEAPU8.set(view, arrayBufferPtr);
-        // console.log("buffer.byteLength", arrayBuffer.byteLength);
-        parent.Module._setAudioBuffer(arrayBufferPtr, arrayBuffer.byteLength);
-        parent.Module._free(arrayBufferPtr);
+        DigitalHuman.speak(new Uint8Array(arrayBuffer));
         await playAudio(arrayBuffer);
     }
+    window.myTest = myTest;
 </script>
 <!--    <script src="js/pako.min.js"></script>-->
 <!--    <script src="js/mp4box.all.min.js"></script>-->
@@ -167,13 +167,19 @@
 <script src="static/js/DHLiveMini.js"></script>
 <script src="static/js/MiniMateLoader.js"></script>
 <script src="static/js/MiniLive2.js"></script>
-<script type="module" src="/src/audio.ts"></script>
-<script src="src/controller.ts" type="module"></script>
+<script type="module" src="/src/dh_helper/audio.ts"></script>
+<script src="src/dh_helper/controller.ts" type="module"></script>
 <script>
     handleClick = async () => {
         const data = await getAndPlayAudio('请介绍一下颐和园')
         console.log(data)
+      if (window.Module) {
+        console.log("Module存在:", window.Module);
+      } else {
+        console.log("Module未定义");
+      }
     }
+
 </script>
 
 </body>
