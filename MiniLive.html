@@ -127,17 +127,21 @@
         }
     </style>
 </head>
+<script src="src/controller.ts" type="module"></script>
 <body>
-<figure id="loadingSpinner">
-    <strong>MiniMates: loading...</strong>
-</figure>
+<!--<figure id="loadingSpinner">-->
+<!--    <strong>MiniMates: loading...</strong>-->
+<!--</figure>-->
 <canvas id="canvasEl"></canvas>
 <canvas id="canvas_video"></canvas>
 <canvas id="canvas_gl" width="128" height="128"></canvas>
-<div id="screen"></div>
-<div id="startMessage">加载中</div>
-<button onclick="test()" style="position: fixed; top: 20px; right: 20px;">
-    qwewqeweqw
+<!--<div id="screen"></div>-->
+<!--<div id="startMessage">加载中</div>-->
+<button onclick="handleClick()" style="position: fixed; top: 20px; right: 20px;">
+    TEST
+</button>
+<button onclick="test()" style="position: fixed; top: 60px; right: 20px;">
+    TEST_SAMPLE
 </button>
 <script>
     async function test() {
@@ -153,6 +157,7 @@
         // console.log("buffer.byteLength", arrayBuffer.byteLength);
         parent.Module._setAudioBuffer(arrayBufferPtr, arrayBuffer.byteLength);
         parent.Module._free(arrayBufferPtr);
+        await playAudio(arrayBuffer);
     }
 </script>
 <!--    <script src="js/pako.min.js"></script>-->
@@ -162,5 +167,14 @@
 <script src="static/js/DHLiveMini.js"></script>
 <script src="static/js/MiniMateLoader.js"></script>
 <script src="static/js/MiniLive2.js"></script>
+<script type="module" src="/src/audio.ts"></script>
+<script src="src/controller.ts" type="module"></script>
+<script>
+    handleClick = async () => {
+        const data = await getAndPlayAudio('请介绍一下颐和园')
+        console.log(data)
+    }
+</script>
+
 </body>
 </html>
