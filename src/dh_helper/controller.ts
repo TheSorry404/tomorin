@@ -1,22 +1,42 @@
-import {Debugger} from "./debugger.ts";
+import { Debugger } from './debugger.ts'
 
-declare const parent: any;
-declare const Module: any;
+declare const parent: any
+declare const Module: any
 
 class DigitalHuman {
-    static speak = (message: Uint8Array): void => {
-        const arrayBuffer = message.buffer;
-        const view: Uint8Array = new Uint8Array(arrayBuffer);
-        const arrayBufferPtr: number = parent.Module._malloc(arrayBuffer.byteLength);
-        console.log("arrayBufferPtr", arrayBufferPtr.toString());
-        console.log("view", view);
-
-        parent.Module.HEAPU8.set(view, arrayBufferPtr);
-        console.log("buffer.byteLength", arrayBuffer.byteLength);
-        parent.Module._setAudioBuffer(arrayBufferPtr, arrayBuffer.byteLength);
-        parent.Module._free(arrayBufferPtr);
+  static speak = (message: Uint8Array): void => {
+    if (!window.Module) {
+      console.log('Module未定义')
+      return
     }
+
+    // 将 module 存储为局部变量
+    const moduleInstance = window.Module
+
+    const arrayBuffer = message.buffer
+    const view: Uint8Array = new Uint8Array(arrayBuffer)
+    const arrayBufferPtr: number = window.Module._malloc(arrayBuffer.byteLength)
+    console.log('arrayBufferPtr', arrayBufferPtr.toString())
+    console.log('view', view)
+
+    moduleInstance.HEAPU8.set(view, arrayBufferPtr)
+    console.log('buffer.byteLength', arrayBuffer.byteLength)
+    moduleInstance._setAudioBuffer(arrayBufferPtr, arrayBuffer.byteLength)
+    moduleInstance._free(arrayBufferPtr)
+  }
 }
 
-(window as any).DigitalHuman = DigitalHuman;
-export default DigitalHuman;
+;(window as any).DigitalHuman = DigitalHuman
+export default DigitalHuman
+
+declare global {
+  interface Window {
+    Module?: {
+      _malloc: (size: number) => number
+      _setAudioBuffer: (ptr: number, length: number) => void
+      _free: (ptr: number) => void
+      HEAPU8: Uint8Array
+      // You can add other functions or properties as needed.
+    }
+  }
+}
