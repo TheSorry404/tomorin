@@ -7,8 +7,10 @@ export function useMiniLiveIframe() {
   const iframeHeight = ref(180)
 
   let isDragging = false
-  let startX = 0, startY = 0
-  let initialLeft = 0, initialTop = 0
+  let startX = 0,
+    startY = 0
+  let initialLeft = 0,
+    initialTop = 0
 
   const getClientX = (e: MouseEvent | TouchEvent) =>
     e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
@@ -66,8 +68,8 @@ export function useMiniLiveIframe() {
     const el = iframeContainer.value
     if (!el) return
     el.style.position = 'fixed'
-    el.style.top = '100px'
-    el.style.left = '100px'
+    el.style.top = '40px'
+    el.style.left = '20px'
     el.style.zIndex = '9999'
 
     window.addEventListener('message', handleMessage)
@@ -76,7 +78,6 @@ export function useMiniLiveIframe() {
   onUnmounted(() => {
     window.removeEventListener('message', handleMessage)
   })
-
 
   onUnmounted(() => {
     // remove any future message or event listeners if needed
@@ -87,6 +88,6 @@ export function useMiniLiveIframe() {
     iframeContainer,
     iframeWidth,
     iframeHeight,
-    onDragStart
+    onDragStart,
   }
 }
