@@ -3,14 +3,13 @@
 <script setup lang="ts">
 // import { onMounted, ref } from 'vue'
 import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
-
-const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 // import { RouterLink, RouterView } from 'vue-router'
 // import HelloWorld from './components/HelloWorld.vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
 // import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
 
+const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 const unityContext = new UnityWebgl({
   loaderUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.loader.js',
   dataUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.data',
@@ -95,8 +94,6 @@ unityContext.addUnityListener('gameStart', (msg) => {
 <style scoped>
 .draggable-container {
   position: absolute;
-  /* bottom: 16px;
-  left: 13px; */
   transition:
     box-shadow 0.25s ease,
     transform 0.25s ease;
@@ -116,8 +113,8 @@ unityContext.addUnityListener('gameStart', (msg) => {
 /* 👇 遮罩层，透明且覆盖整个 iframe 区域，负责触发拖动事件 */
 .drag-overlay {
   position: fixed;
-  bottom: 16px;
-  left: 13px;
+  top: 0px;
+  left: 0px;
   width: 100%;
   height: 100%;
   cursor: grab;
