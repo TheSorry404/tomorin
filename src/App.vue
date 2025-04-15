@@ -1,14 +1,21 @@
 <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css"></link> -->
 <script setup lang="ts">
-import { ref } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+// import { onMounted, ref } from 'vue'
+import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
+
+const {
+  iframeSrc,
+  iframeContainer,
+  iframeWidth,
+  iframeHeight,
+  onDragStart
+} = useMiniLiveIframe()
+// import { RouterLink, RouterView } from 'vue-router'
+// import HelloWorld from './components/HelloWorld.vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
-import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
-
-const iframeSrc = ref('/MiniLive.html')
+// import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
 
 const unityContext = new UnityWebgl({
   loaderUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.loader.js',
@@ -22,14 +29,15 @@ const unityContext = new UnityWebgl({
 //   .on('mounted', () => console.log('unity mounted ...'))
 //   .on('debug', (msg) => console.log('unity debug', msg));
 
-// unityContext.addUnityListener('gameStart', (msg) => {
-//   alert(msg);
-//   console.log('gameStart : ', msg);
-// });
+unityContext.addUnityListener('gameStart', (msg) => {
+  alert(msg);
+  console.log('gameStart : ', msg);
+});
 
 // function sendMessage() {
 //   unityContext.sendMessage('GameUI', 'ReceiveRole', 'Tanya');
 // }
+
 </script>
 
 <style>
@@ -45,23 +53,32 @@ const unityContext = new UnityWebgl({
     <UnityVue :unity="unityContext" tabindex="0" />
   </div>
 
+<div ref="iframeContainer"  class="draggable-container">
+  <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
   <iframe
     frameborder="0"
-    style="z-index: 666; position: fixed; bottom: 0; left: 0; width: 33%; height: 33%; float: left"
     :src="iframeSrc"
-  ></iframe>
+    :style="{width: iframeWidth + 'px', height: iframeHeight + 'px'}">
+  </iframe>
+<!--  <div class="drag-handle"   style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; cursor: move; z-index: 10000; background: rgba(0,0,0,0.1);">-->
+
+<!--  </div>-->
+</div>
 
   <v-fab
-    :key="'absolute'"
     :absolute="true"
     :color="'primary'"
     :location="'right bottom'"
     size="large"
     id="fab"
-    name="fab"
     icon
     style="z-index: 9999; margin-right: 12px; margin-top: -15px"
   >
+<!--    :key="'absolute'"-->
+
+<!--    name="fab"-->
+
+<!--  />-->
     <v-icon>{{ 'mdi-crown' }}</v-icon>
     <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
       <v-btn key="1" color="success" icon>
@@ -82,5 +99,31 @@ const unityContext = new UnityWebgl({
     </v-speed-dial>
   </v-fab>
 </template>
-<style>
+<style scoped>
+.draggable-container {
+  position: fixed;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  will-change: transform;
+}
+
+.draggable-container.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  cursor: grabbing;
+  opacity: 0.95;
+}
+/* 👇 遮罩层，透明且覆盖整个 iframe 区域，负责触发拖动事件 */
+.drag-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  z-index: 2;
+}
 </style>
