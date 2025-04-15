@@ -11,8 +11,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            height: 100%;
             margin: 0;
+            width: 100%;
             background-color: #f0f0f0;
             overflow: hidden;
         }
@@ -122,8 +123,8 @@
             left: -9999px; /* 移出可视区域 */
             top: -9999px;
             /* 保持canvas正常尺寸 */
-            width: 300px;
-            height: 150px;
+            width: 150px;
+            height: 200px;
         }
     </style>
 </head>
@@ -136,12 +137,12 @@
 <canvas id="canvas_gl" width="128" height="128"></canvas>
 <!--<div id="screen"></div>-->
 <!--<div id="startMessage">加载中</div>-->
-<button onclick="handleClick()" style="position: fixed; top: 20px; right: 20px;">
-    TEST
-</button>
-<button onclick="myTest()" style="position: fixed; top: 60px; right: 20px;">
-    TEST_SAMPLE
-</button>
+<!--<button onclick="handleClick()" style="position: fixed; top: 20px; right: 20px;">-->
+<!--  TEST-->
+<!--</button>-->
+<!--<button onclick="myTest()" style="position: fixed; top: 60px; right: 20px;">-->
+<!--  TEST_SAMPLE-->
+<!--</button>-->
 <script type="module">
     import DigitalHuman from './src/dh_helper/controller.js'
 
@@ -159,6 +160,13 @@
         await playAudio(arrayBuffer);
     }
     window.myTest = myTest;
+
+    const video = document.getElementById('myVideo')
+
+    video.addEventListener('loadedmetadata', () => {
+      const ratio = video.videoHeight / video.videoWidth
+      window.parent.postMessage({ type: 'video-ratio', ratio }, '*')
+    })
 </script>
 <!--    <script src="js/pako.min.js"></script>-->
 <!--    <script src="js/mp4box.all.min.js"></script>-->
