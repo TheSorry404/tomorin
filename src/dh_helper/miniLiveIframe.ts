@@ -55,6 +55,34 @@ export function useMiniLiveIframe() {
     document.removeEventListener('mouseup', onDragEnd)
     document.removeEventListener('touchmove', onDragging)
     document.removeEventListener('touchend', onDragEnd)
+
+    const el = iframeContainer.value
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      const outOfBounds =
+        rect.left < 0 ||
+        rect.top < 0 ||
+        rect.right > window.innerWidth ||
+        rect.bottom > window.innerHeight
+
+      if (outOfBounds) {
+        const el = iframeContainer.value
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          const margin = 10 // Distance from the edge
+          const newTop = Math.min(
+            Math.max(rect.top, margin),
+            window.innerHeight - rect.height - margin,
+          )
+          const newLeft = Math.min(
+            Math.max(rect.left, margin),
+            window.innerWidth - rect.width - margin,
+          )
+          el.style.top = `${newTop}px`
+          el.style.left = `${newLeft}px`
+        }
+      }
+    }
   }
 
   const handleMessage = (event: MessageEvent) => {
