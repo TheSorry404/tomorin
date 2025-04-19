@@ -1,13 +1,14 @@
 <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css"></link> -->
 <script setup lang="ts">
-// import { onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
 // import { RouterLink, RouterView } from 'vue-router'
 // import HelloWorld from './components/HelloWorld.vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
 // import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
+import ChatBox from './components/ChatBox.vue'
 
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 const unityContext = new UnityWebgl({
@@ -30,6 +31,38 @@ unityContext.addUnityListener('gameStart', (msg) => {
 // function sendMessage() {
 //   unityContext.sendMessage('GameUI', 'ReceiveRole', 'Tanya');
 // }
+
+// 创建一个 ref 来引用 ChatBox 组件
+const chatBox = ref<InstanceType<typeof ChatBox> | null>(null)
+
+// 定义方法来控制 ChatBox
+const showChat = () => {
+  chatBox.value?.showChatBox()
+}
+
+const hideChat = () => {
+  chatBox.value?.hideChatBox()
+}
+
+const clearChat = () => {
+  chatBox.value?.clearConversation()
+}
+
+onMounted(() => {
+  hideChat()
+  const fixIosInputZoom = () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (isIOS) {
+      document.body.style.zoom = '1' // 避免放大
+      document.body.style.overflow = 'hidden' // 防止向下滚动
+    }
+  }
+
+  window.addEventListener('focusin', fixIosInputZoom) // 输入框获得焦点
+  window.addEventListener('focusout', () => {
+    document.body.style.overflow = '' // 恢复滚动
+  })
+})
 </script>
 
 <style>
@@ -57,6 +90,23 @@ unityContext.addUnityListener('gameStart', (msg) => {
     <!--  </div>-->
   </div>
 
+  <ChatBox style="z-index: 9999" ref="chatBox" :visible="false" />
+  <!-- <script lang="ts">
+    chatBox.hideChatBox()
+  </script> -->
+
+  <v-btn
+    position="fixed"
+    style="left: 0; bottom: 20px; margin-left: 12px; margin-top: -20px; z-index: 9989"
+    @click="showChat"
+    key="1"
+    color="success"
+    icon
+    size="large"
+  >
+    <v-icon size="24">$success</v-icon>
+  </v-btn>
+
   <v-fab
     :absolute="true"
     :color="'primary'"
@@ -64,7 +114,7 @@ unityContext.addUnityListener('gameStart', (msg) => {
     size="large"
     id="fab"
     icon
-    style="z-index: 9999; margin-right: 12px; margin-top: -20px"
+    style="z-index: 9988; margin-right: 12px; margin-top: -20px"
   >
     <!--    :key="'absolute'"-->
 
@@ -91,6 +141,7 @@ unityContext.addUnityListener('gameStart', (msg) => {
     </v-speed-dial>
   </v-fab>
 </template>
+
 <style scoped>
 .draggable-container {
   position: absolute;
@@ -119,5 +170,17 @@ unityContext.addUnityListener('gameStart', (msg) => {
   height: 100%;
   cursor: grab;
   z-index: 2;
+}
+html,
+body,
+#app {
+  height: 100%;
+  overflow: hidden; /* 关键：防止多余滚动 */
+}
+
+input,
+textarea,
+select {
+  font-size: 16px; /* iOS Safari 自动放大的临界点 */
 }
 </style>
