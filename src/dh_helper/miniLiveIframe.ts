@@ -12,10 +12,20 @@ export function useMiniLiveIframe() {
   let initialLeft = 0,
     initialTop = 0
 
-  const getClientX = (e: MouseEvent | TouchEvent) =>
-    e instanceof TouchEvent ? e.touches[0].clientX : e.clientX
-  const getClientY = (e: MouseEvent | TouchEvent) =>
-    e instanceof TouchEvent ? e.touches[0].clientY : e.clientY
+  const getClientX = (e: MouseEvent | TouchEvent) => {
+    if (window.TouchEvent === undefined) return (e as MouseEvent).clientX
+    if (window.MouseEvent === undefined) return (e as TouchEvent).touches[0].clientX
+    if (e instanceof MouseEvent) return e.clientX
+    if (e instanceof TouchEvent) return e.touches[0].clientX
+    throw Error('got e has no supported type.')
+  }
+  const getClientY = (e: MouseEvent | TouchEvent) => {
+    if (window.TouchEvent === undefined) return (e as MouseEvent).clientY
+    if (window.MouseEvent === undefined) return (e as TouchEvent).touches[0].clientY
+    if (e instanceof MouseEvent) return e.clientY
+    if (e instanceof TouchEvent) return e.touches[0].clientY
+    throw Error('got e has no supported type.')
+  }
 
   const onDragStart = (e: MouseEvent | TouchEvent) => {
     const el = iframeContainer.value
