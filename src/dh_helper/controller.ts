@@ -4,18 +4,18 @@ declare const parent: any
 declare const Module: any
 
 class DigitalHuman {
-  static speak = (message: Uint8Array): void => {
-    if (!window.Module) {
+  static speak = (message: Uint8Array, iframeModule: any): void => {
+    if (!iframeModule) {
       console.log('Module未定义')
       return
     }
 
     // 将 module 存储为局部变量
-    const moduleInstance = window.Module
+    const moduleInstance = iframeModule
 
     const arrayBuffer = message.buffer
     const view: Uint8Array = new Uint8Array(arrayBuffer)
-    const arrayBufferPtr: number = window.Module._malloc(arrayBuffer.byteLength)
+    const arrayBufferPtr: number = iframeModule._malloc(arrayBuffer.byteLength)
     console.log('arrayBufferPtr', arrayBufferPtr.toString())
     console.log('view', view)
 

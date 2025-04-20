@@ -10,6 +10,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import fs from 'fs';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,4 +21,13 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    // https: {
+    //   key: fs.readFileSync('./key.pem'),
+    //   cert: fs.readFileSync('./cert.pem'),
+    // },
+    // 可选：指定端口
+    port: 5173,
+  },
 })
+

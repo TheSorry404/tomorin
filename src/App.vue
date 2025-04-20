@@ -1,13 +1,14 @@
-<!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" /> -->
-<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css"></link> -->
 <script setup lang="ts">
 // import { onMounted, ref } from 'vue'
 import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
 // import { RouterLink, RouterView } from 'vue-router'
 // import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
 // import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
+import DigitalHuman from '@/dh_helper/controller.ts'
+import { getAndPlayAudio, playAudio } from '@/dh_helper/audio.ts'
 
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 const unityContext = new UnityWebgl({
@@ -17,19 +18,30 @@ const unityContext = new UnityWebgl({
   codeUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.wasm',
 }) // Check before release, if in need it could be a OSS/COS address
 
-// unityContext
-//   .on('progress', (p) => console.log('loading :', p))
-//   .on('mounted', () => console.log('unity mounted ...'))
-//   .on('debug', (msg) => console.log('unity debug', msg));
-
 unityContext.addUnityListener('gameStart', (msg) => {
   alert(msg)
   console.log('gameStart : ', msg)
 })
+/// 和iframe通信
+const dh = ref()
 
-// function sendMessage() {
-//   unityContext.sendMessage('GameUI', 'ReceiveRole', 'Tanya');
-// }
+let iframeWindow = dh.value
+
+const test = async () => {
+  iframeWindow = dh.value
+  if (!iframeWindow) {
+    console.error('iframe not loaded yet')
+    return
+  }
+  const iframeModule = iframeWindow.contentWindow.Module
+  console.log(iframeModule)
+  const response = await fetch('/test.wav')
+  const arrayBuffer = await response.arrayBuffer() // 获取 ArrayBuffer
+  DigitalHuman.speak(new Uint8Array(arrayBuffer), iframeModule)
+  await playAudio(arrayBuffer)
+}
+
+let message = ref('')
 </script>
 
 <style>
@@ -40,13 +52,14 @@ unityContext.addUnityListener('gameStart', (msg) => {
 </style>
 
 <template>
-  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">
-    <UnityVue :unity="unityContext" tabindex="0" />
-  </div>
-
+  <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
+  <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
+  <!--  </div>-->
+  <v-btn @click="test"> Speak with test wav</v-btn>
   <div ref="iframeContainer" class="draggable-container">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
+      ref="dh"
       frameborder="0"
       :src="iframeSrc"
       :style="{ width: iframeWidth + 'px', height: iframeHeight + 'px' }"
@@ -56,40 +69,8 @@ unityContext.addUnityListener('gameStart', (msg) => {
 
     <!--  </div>-->
   </div>
-
-  <v-fab
-    :absolute="true"
-    :color="'primary'"
-    :location="'right bottom'"
-    size="large"
-    id="fab"
-    icon
-    style="z-index: 9999; margin-right: 12px; margin-top: -20px"
-  >
-    <!--    :key="'absolute'"-->
-
-    <!--    name="fab"-->
-
-    <!--  />-->
-    <v-icon>{{ 'mdi-crown' }}</v-icon>
-    <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
-      <v-btn key="1" color="success" icon>
-        <v-icon size="24">$success</v-icon>
-      </v-btn>
-
-      <v-btn key="2" color="info" icon>
-        <v-icon size="24">$info</v-icon>
-      </v-btn>
-
-      <v-btn key="3" color="warning" icon>
-        <v-icon size="24">$warning</v-icon>
-      </v-btn>
-
-      <v-btn key="4" color="error" icon>
-        <v-icon size="24">$error</v-icon>
-      </v-btn>
-    </v-speed-dial>
-  </v-fab>
+  <v-text-field v-model="message" label="Message" />
+  <v-btn @click="getAndPlayAudio(message, dh.contentWindow.Module)"></v-btn>
 </template>
 <style scoped>
 .draggable-container {
@@ -110,6 +91,7 @@ unityContext.addUnityListener('gameStart', (msg) => {
   cursor: grabbing;
   opacity: 0.95;
 }
+
 /* 👇 遮罩层，透明且覆盖整个 iframe 区域，负责触发拖动事件 */
 .drag-overlay {
   position: fixed;
