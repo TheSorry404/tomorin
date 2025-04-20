@@ -2,14 +2,16 @@
 import { onMounted, ref } from 'vue'
 import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
 // import { RouterLink, RouterView } from 'vue-router'
-// import HelloWorld from './components/HelloWorld.vue'
+import HelloWorld from './components/HelloWorld.vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
 // import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
 import ChatBox from './components/ChatBox.vue'
 import DigitalHuman from '@/dh_helper/controller.ts'
 import { getAndPlayAudio, playAudio } from '@/dh_helper/audio.ts'
+import MicRecorder from './assets/utils/MicRecorder'
 
+/*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 const unityContext = new UnityWebgl({
   loaderUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.loader.js',
@@ -24,44 +26,39 @@ unityContext.addUnityListener('gameStart', (msg) => {
 })
 /// 和iframe通信
 const dh = ref()
-
-let iframeWindow = dh.value
-
-// function sendMessage() {
-//   unityContext.sendMessage('GameUI', 'ReceiveRole', 'Tanya');
-// }
-
-// 创建一个 ref 来引用 ChatBox 组件
-const chatBox = ref<InstanceType<typeof ChatBox> | null>(null)
-
-// 定义方法来控制 ChatBox
-const showChat = () => {
-  chatBox.value?.showChatBox()
+/*       聊天框相关控件       */
+const recorder = new MicRecorder()
+let message = ref('')
+const tab = ref('one')
+const isRecording = ref(false)
+const startRecording = async () => {
+  console.log('startRecording')
+  isRecording.value = true
+  // 调用麦克风
+  await recorder.startRecording()
+}
+const stopRecording = async () => {
+  console.log('stopRecording')
+  // 添加停止录音的逻辑
+  isRecording.value = false
+  await recorder.stopRecording()
+  console.log('Recording File: ', recorder.recordingFile)
 }
 
-const hideChat = () => {
-  chatBox.value?.hideChatBox()
-}
-
-const clearChat = () => {
-  chatBox.value?.clearConversation()
-}
-
-onMounted(() => {
-  hideChat()
-  const fixIosInputZoom = () => {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    if (isIOS) {
-      document.body.style.zoom = '1' // 避免放大
-      document.body.style.overflow = 'hidden' // 防止向下滚动
-    }
+const textFieldLoading = ref(false)
+const sendTextMessage = async () => {
+  console.log('sendTextMessage')
+  if (message.value !== '') {
+    // 发送消息
+    console.log('发送消息:', message.value)
+    message.value = '' // 清空输入框
+    textFieldLoading.value = true
+    console.log(dh.value)
+    const dhIframe = dh.value
+    await getAndPlayAudio(message.value, dhIframe)
+    textFieldLoading.value = false
   }
-
-  window.addEventListener('focusin', fixIosInputZoom) // 输入框获得焦点
-  window.addEventListener('focusout', () => {
-    document.body.style.overflow = '' // 恢复滚动
-  })
-})
+}
 </script>
 
 <style>
@@ -72,10 +69,11 @@ onMounted(() => {
 </style>
 
 <template>
-  <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
-  <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
-  <!--  </div>-->
-  <v-btn @click="test"> Speak with test wav</v-btn>
+    Unity视窗 fixed
+    <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">
+      <UnityVue :unity="unityContext" tabindex="0" />
+    </div>
+  <!--  数字人窗口  -->
   <div ref="iframeContainer" class="draggable-container">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
@@ -85,62 +83,53 @@ onMounted(() => {
       :style="{ width: iframeWidth + 'px', height: iframeHeight + 'px' }"
     >
     </iframe>
-    <!--  <div class="drag-handle"   style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; cursor: move; z-index: 10000; background: rgba(0,0,0,0.1);">-->
-
-    <!--  </div>-->
   </div>
-  </template>
-
-  <ChatBox style="z-index: 9999" ref="chatBox" :visible="false" />
-  <!-- <script lang="ts">
-    chatBox.hideChatBox()
-  </script> -->
-
-  <v-btn
-    position="fixed"
-    style="left: 0; bottom: 20px; margin-left: 12px; margin-top: -20px; z-index: 9989"
-    @click="showChat"
-    key="1"
-    color="success"
-    icon
-    size="large"
+  <!--  聊天窗口  -->
+  <v-card
+    class="chat-box"
+    width="90%"
+    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%)"
   >
-    <v-icon size="24">$success</v-icon>
-  </v-btn>
+    <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
+      <span style="margin-left: 10px">说话中...</span>
+    </v-alert>
+    <v-tabs v-model="tab" bg-color="primary" height="30px">
+      <v-tab value="one">语音</v-tab>
+      <v-tab value="two">文字</v-tab>
+    </v-tabs>
 
-  <v-fab
-    :absolute="true"
-    :color="'primary'"
-    :location="'right bottom'"
-    size="large"
-    id="fab"
-    icon
-    style="z-index: 9988; margin-right: 12px; margin-top: -20px"
-  >
-    <!--    :key="'absolute'"-->
-
-    <!--    name="fab"-->
-
-    <!--  />-->
-    <v-icon>{{ 'mdi-crown' }}</v-icon>
-    <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
-      <v-btn key="1" color="success" icon>
-        <v-icon size="24">$success</v-icon>
-      </v-btn>
-
-      <v-btn key="2" color="info" icon>
-        <v-icon size="24">$info</v-icon>
-      </v-btn>
-
-      <v-btn key="3" color="warning" icon>
-        <v-icon size="24">$warning</v-icon>
-      </v-btn>
-
-      <v-btn key="4" color="error" icon>
-        <v-icon size="24">$error</v-icon>
-      </v-btn>
-    </v-speed-dial>
-  </v-fab>
+    <v-card-text>
+      <v-tabs-window v-model="tab">
+        <!--语音输入-->
+        <v-tabs-window-item value="one">
+          <v-btn
+            @mousedown="startRecording"
+            @mouseup="stopRecording"
+            @touchstart="startRecording"
+            @touchend="stopRecording"
+            style="width: 100%"
+            variant="outlined"
+          >
+            按住说话
+          </v-btn>
+        </v-tabs-window-item>
+        <!--文字输入-->
+        <v-tabs-window-item value="two">
+          <v-card>
+            <v-text-field
+              v-model="message"
+              label="请输入..."
+              variant="filled"
+              auto-grow
+              :loading="textFieldLoading"
+            ></v-text-field>
+            <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
+          </v-card>
+        </v-tabs-window-item>
+      </v-tabs-window>
+    </v-card-text>
+  </v-card>
+</template>
 
 <style scoped>
 .draggable-container {
@@ -172,6 +161,7 @@ onMounted(() => {
   cursor: grab;
   z-index: 2;
 }
+
 html,
 body,
 #app {
