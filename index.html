@@ -3,11 +3,30 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport"
+    content="height=device-height, width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" href="/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vite App</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+  <script>
+    document.body.style.overflow = 'hidden';
+    document.querySelector('input').addEventListener('focus', (e) => {
+      // 禁止页面缩放
+      document.body.style.zoom = '1';
+    });
+    window.addEventListener('focus', () => {
+      document.body.style.zoom = '1';
+    });
+  </script>
+  <style>
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
 </head>
 
@@ -17,4 +36,3 @@
 </body>
 
 </html>
-

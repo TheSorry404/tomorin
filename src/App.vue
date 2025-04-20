@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// import { onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
 // import { RouterLink, RouterView } from 'vue-router'
 // import HelloWorld from './components/HelloWorld.vue'
-import { ref } from 'vue'
 import UnityWebgl from 'unity-webgl'
 import UnityVue from 'unity-webgl/vue'
 // import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
+import ChatBox from './components/ChatBox.vue'
 import DigitalHuman from '@/dh_helper/controller.ts'
 import { getAndPlayAudio, playAudio } from '@/dh_helper/audio.ts'
 
@@ -27,21 +27,41 @@ const dh = ref()
 
 let iframeWindow = dh.value
 
-const test = async () => {
-  iframeWindow = dh.value
-  if (!iframeWindow) {
-    console.error('iframe not loaded yet')
-    return
-  }
-  const iframeModule = iframeWindow.contentWindow.Module
-  console.log(iframeModule)
-  const response = await fetch('/test.wav')
-  const arrayBuffer = await response.arrayBuffer() // 获取 ArrayBuffer
-  DigitalHuman.speak(new Uint8Array(arrayBuffer), iframeModule)
-  await playAudio(arrayBuffer)
+// function sendMessage() {
+//   unityContext.sendMessage('GameUI', 'ReceiveRole', 'Tanya');
+// }
+
+// 创建一个 ref 来引用 ChatBox 组件
+const chatBox = ref<InstanceType<typeof ChatBox> | null>(null)
+
+// 定义方法来控制 ChatBox
+const showChat = () => {
+  chatBox.value?.showChatBox()
 }
 
-let message = ref('')
+const hideChat = () => {
+  chatBox.value?.hideChatBox()
+}
+
+const clearChat = () => {
+  chatBox.value?.clearConversation()
+}
+
+onMounted(() => {
+  hideChat()
+  const fixIosInputZoom = () => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    if (isIOS) {
+      document.body.style.zoom = '1' // 避免放大
+      document.body.style.overflow = 'hidden' // 防止向下滚动
+    }
+  }
+
+  window.addEventListener('focusin', fixIosInputZoom) // 输入框获得焦点
+  window.addEventListener('focusout', () => {
+    document.body.style.overflow = '' // 恢复滚动
+  })
+})
 </script>
 
 <style>
@@ -69,9 +89,59 @@ let message = ref('')
 
     <!--  </div>-->
   </div>
-  <v-text-field v-model="message" label="Message" />
-  <v-btn @click="getAndPlayAudio(message, dh.contentWindow.Module)"></v-btn>
-</template>
+  </template>
+
+  <ChatBox style="z-index: 9999" ref="chatBox" :visible="false" />
+  <!-- <script lang="ts">
+    chatBox.hideChatBox()
+  </script> -->
+
+  <v-btn
+    position="fixed"
+    style="left: 0; bottom: 20px; margin-left: 12px; margin-top: -20px; z-index: 9989"
+    @click="showChat"
+    key="1"
+    color="success"
+    icon
+    size="large"
+  >
+    <v-icon size="24">$success</v-icon>
+  </v-btn>
+
+  <v-fab
+    :absolute="true"
+    :color="'primary'"
+    :location="'right bottom'"
+    size="large"
+    id="fab"
+    icon
+    style="z-index: 9988; margin-right: 12px; margin-top: -20px"
+  >
+    <!--    :key="'absolute'"-->
+
+    <!--    name="fab"-->
+
+    <!--  />-->
+    <v-icon>{{ 'mdi-crown' }}</v-icon>
+    <v-speed-dial :location="'top center'" :transition="'scale-transition'" activator="parent">
+      <v-btn key="1" color="success" icon>
+        <v-icon size="24">$success</v-icon>
+      </v-btn>
+
+      <v-btn key="2" color="info" icon>
+        <v-icon size="24">$info</v-icon>
+      </v-btn>
+
+      <v-btn key="3" color="warning" icon>
+        <v-icon size="24">$warning</v-icon>
+      </v-btn>
+
+      <v-btn key="4" color="error" icon>
+        <v-icon size="24">$error</v-icon>
+      </v-btn>
+    </v-speed-dial>
+  </v-fab>
+
 <style scoped>
 .draggable-container {
   position: absolute;
@@ -101,5 +171,17 @@ let message = ref('')
   height: 100%;
   cursor: grab;
   z-index: 2;
+}
+html,
+body,
+#app {
+  height: 100%;
+  overflow: hidden; /* 关键：防止多余滚动 */
+}
+
+input,
+textarea,
+select {
+  font-size: 16px; /* iOS Safari 自动放大的临界点 */
 }
 </style>
