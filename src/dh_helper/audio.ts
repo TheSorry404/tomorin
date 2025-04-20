@@ -8,8 +8,11 @@ interface StreamChunk {
   answer: string
 }
 
-export async function getAndPlayAudio(message: string, iframeModule: any): Promise<void> {
-  console.log('Querying with message :', message)
+const hello = window.Module
+// 传入iframeWindow是iframe的对象
+export async function getAndPlayAudio(message: string, iframeWindow: any): Promise<void> {
+  console.log(iframeWindow, 'iframeWindow')
+  const iframeModule = iframeWindow.contentWindow.Module
   const query = message
   try {
     const response = await fetch('http://localhost:8000/ask', {
