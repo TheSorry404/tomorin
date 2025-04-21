@@ -10,6 +10,7 @@ import ChatBox from './components/ChatBox.vue'
 import DigitalHuman from '@/dh_helper/controller.ts'
 import { getAndPlayAudio, playAudio } from '@/dh_helper/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
+import { backendUrl, blobToBase64 } from './assets/utils/Global'
 
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
@@ -31,6 +32,7 @@ const recorder = new MicRecorder()
 let message = ref('')
 const tab = ref('one')
 const isRecording = ref(false)
+const isQuerying = ref(false)
 const startRecording = async () => {
   console.log('startRecording')
   isRecording.value = true
@@ -41,8 +43,63 @@ const stopRecording = async () => {
   console.log('stopRecording')
   // 添加停止录音的逻辑
   isRecording.value = false
-  await recorder.stopRecording()
-  console.log('Recording File: ', recorder.recordingFile)
+  const recordingBlob = await recorder.stopRecording()
+  console.log('Recording File: ', recordingBlob)
+  console.log('Record Time:', recorder.getAudioTime())
+  isQuerying.value = true
+  // 向后端发送请求
+  // 将recordingBlob转换为base64
+  const base64Recording = await blobToBase64(recordingBlob)
+  console.log('base64Recording: ', recordingBlob);
+  // 获取建议
+    (async () => {
+      // 获取跳转建议
+      const response = await fetch(`${backendUrl}/voice_suggest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ recording: base64Recording }),
+      })
+      const data = await response.json()
+      console.log('Suggestions:', data)
+      if (data['suggestion'].length > 0) {
+        showSnackbar({
+          position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
+          jumpFun: () => {
+            console.log('跳转到:', data['suggestion'])
+            // todo
+            Camera.moveTo(data['suggestion'])
+          },
+        })
+      }
+    })().then((r) => {})
+
+  // 获取语音
+  await fetch(`${backendUrl}/voice_ask`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ recording: base64Recording }),
+  })
+    .then((response) => {
+      if (response.ok) {
+        console.log('上传成功')
+        // 如果后端返回 JSON，可以进一步解析
+        return response
+      } else {
+        throw new Error(`上传失败，状态码：${response.status}`)
+      }
+    })
+    .then((data) => {
+      DigitalHuman.speakStream(data, dh.value)
+    })
+    .catch((error) => {
+      console.error('上传过程中出错:', error)
+      isQuerying.value = false
+    })
+  isQuerying.value = false
 }
 
 const textFieldLoading = ref(false)
@@ -51,13 +108,49 @@ const sendTextMessage = async () => {
   if (message.value !== '') {
     // 发送消息
     console.log('发送消息:', message.value)
-    message.value = '' // 清空输入框
     textFieldLoading.value = true
     console.log(dh.value)
     const dhIframe = dh.value
-    await getAndPlayAudio(message.value, dhIframe)
+    try {
+      (async () => {
+        // 获取跳转建议
+        const response = await fetch(`${backendUrl}/suggest`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: message.value }),
+        })
+        const data = await response.json()
+        console.log('Suggestions:', data)
+        if (data['suggestion'].length > 0) {
+          showSnackbar({
+            position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
+            jumpFun: () => {
+              console.log('跳转到:', data['suggestion'])
+              // todo
+            },
+          })
+        }
+      })().then((r) => {})
+      await getAndPlayAudio(message.value, dhIframe)
+      message.value = '' // 清空输入框
+    } catch (e) {
+      console.error('获取音频失败:', e)
+      alert('服务器忙或服务器未启动，请稍后再试')
+    }
     textFieldLoading.value = false
   }
+}
+
+/*       提示       */
+const snackbar = ref(false)
+const suggested_position = ref('')
+const jumping = ref(() => {})
+const showSnackbar = ({ position, jumpFun }) => {
+  suggested_position.value = position
+  jumping.value = jumpFun
+  snackbar.value = true
 }
 </script>
 
@@ -69,10 +162,10 @@ const sendTextMessage = async () => {
 </style>
 
 <template>
-    Unity视窗 fixed
-    <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">
-      <UnityVue :unity="unityContext" tabindex="0" />
-    </div>
+  <!--  Unity视窗 fixed-->
+  <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
+  <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
+  <!--  </div>-->
   <!--  数字人窗口  -->
   <div ref="iframeContainer" class="draggable-container">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
@@ -109,6 +202,7 @@ const sendTextMessage = async () => {
             @touchend="stopRecording"
             style="width: 100%"
             variant="outlined"
+            :disabled="isQuerying"
           >
             按住说话
           </v-btn>
@@ -122,13 +216,23 @@ const sendTextMessage = async () => {
               variant="filled"
               auto-grow
               :loading="textFieldLoading"
+              :disabled="textFieldLoading"
             ></v-text-field>
-            <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
+            <v-btn style="width: 100%" :disabled="textFieldLoading" @click="sendTextMessage"
+              >发送
+            </v-btn>
           </v-card>
         </v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
   </v-card>
+  <v-snackbar v-model="snackbar">
+    <p>建议前往 {{ suggested_position }}</p>
+    <v-btn variant="text" style="width: 100%">带我去吧</v-btn>
+    <template v-slot:actions>
+      <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
 <style scoped>
