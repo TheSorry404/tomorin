@@ -15,10 +15,10 @@ import { backendUrl, blobToBase64 } from './assets/utils/Global'
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 const unityContext = new UnityWebgl({
-  loaderUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.loader.js',
-  dataUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.data',
-  frameworkUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.framework.js',
-  codeUrl: 'https://academy-1258888325.cos.ap-chongqing.myqcloud.com/WebGL.wasm',
+  loaderUrl: 'https://acacos-cdn.syan.wang/WebGL.loader.js',
+  dataUrl: 'https://acacos-cdn.syan.wang/WebGL.data',
+  frameworkUrl: 'https://acacos-cdn.syan.wang/WebGL.framework.js',
+  codeUrl: 'https://acacos-cdn.syan.wang/WebGL.wasm',
 }) // Check before release, if in need it could be a OSS/COS address
 
 unityContext.addUnityListener('gameStart', (msg) => {
