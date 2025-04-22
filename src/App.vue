@@ -188,7 +188,7 @@ const imageStyle = computed(() => {
                   <v-img
                     :src="img.src"
                     :alt="img.label"
-                    @error="(e) => (e.target.src = '/img/img.svg')"
+                    @error="(e) => (e.target.src = '/img/image.svg')"
                     :style="imageStyle"
                     cover
                     class="hover-effect"
