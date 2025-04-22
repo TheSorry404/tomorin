@@ -22,10 +22,10 @@ export default defineConfig({
     },
   },
   server: {
-    // https: {
-    //   key: fs.readFileSync('./key.pem'),
-    //   cert: fs.readFileSync('./cert.pem'),
-    // },
+    https: {
+      key: fs.readFileSync('./privkey.pem'),
+      cert: fs.readFileSync('./cert.pem'),
+    },
     // 可选：指定端口
     port: 5173,
   },
