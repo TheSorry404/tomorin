@@ -5,7 +5,7 @@ import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
 import { backendUrl, blobToBase64 } from './assets/utils/Global'
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
@@ -24,7 +24,7 @@ unityContext.addUnityListener('gameStart', (msg) => {
 const dh = ref()
 /*       聊天框相关控件       */
 const recorder = new MicRecorder()
-let message = ref('')
+const message = ref('')
 const tab = ref('one')
 const isRecording = ref(false)
 const isQuerying = ref(false)
@@ -103,6 +103,7 @@ const sendTextMessage = async () => {
   if (message.value !== '') {
     // 发送消息
     console.log('发送消息:', message.value)
+    message.value = '' // 清空输入框
     textFieldLoading.value = true
     console.log(dh.value)
     const dhIframe = dh.value
@@ -138,6 +139,22 @@ const sendTextMessage = async () => {
   }
 }
 
+/**
+ * 推荐显示窗
+* */
+
+const recommendationImages = [
+  {src:'/img/售票处.jpg',label:'售票处'},
+  {src:'/img/文昌阁.jpg',label:'文昌阁'},
+  {src:'/img/昆明湖.jpg',label:'昆明湖'},
+  {src:'/img/画中游.jpg',label:'画中游'},
+  {src:'/img/长廊.jpg',label:'长廊'},
+  {src:'/img/敬请期待.svg',label:'到底啦~'},
+]
+
+const handleRecommendationClick = (label: string) => {
+  console.log('点击了图片：', label)
+}
 /*       提示       */
 const snackbar = ref(false)
 const suggested_position = ref('')
@@ -170,6 +187,31 @@ declare global {
 
 // 向外暴露函数
 window.map_initialize = initialize
+
+const isMobile = ref(false)
+
+onMounted(() => {
+  isMobile.value = window.innerWidth <= 800
+})
+
+// 文本样式
+const textStyle = computed(() => ({
+  marginTop: '4px',
+  textAlign: 'center',
+  fontSize: isMobile.value ? '14px' : '16px',
+  color: '#555',
+}))
+
+// // 图片样式
+const imageStyle = computed(() => {
+  return {
+    width: isMobile.value ? '88px' : '120px', // 移动端更小
+    height: isMobile.value ? '55px' : '80px',
+    boxShadow: 'none',
+    transition: 'box-shadow 0.3s ease, transform 0.3s ease',
+  }
+})
+
 </script>
 
 <style>
@@ -210,6 +252,7 @@ window.map_initialize = initialize
     <v-tabs v-model="tab" bg-color="primary" height="30px">
       <v-tab value="one">语音</v-tab>
       <v-tab value="two">文字</v-tab>
+      <v-tab value="three">推荐</v-tab>
     </v-tabs>
 
     <v-card-text>
@@ -245,6 +288,41 @@ window.map_initialize = initialize
               @click="sendTextMessage"
               >发送
             </v-btn>
+            <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
+          </v-card>
+        </v-tabs-window-item>
+<!--        推荐-->
+        <v-tabs-window-item value="three">
+          <v-card>
+            <v-container fluid>
+              <v-slide-group
+                show-arrows="false"
+                center-active
+                mandatory
+              >
+                <div
+                  v-for="(img, index) in recommendationImages"
+                  :key="index"
+                  class="image-item"
+                  @click="handleRecommendationClick(img.label)"
+                >
+                  <v-img
+                    :src="img.src"
+                    :alt="img.label"
+                    @error="(e) => (e.target.src = '/img/image.svg')"
+                    :style="imageStyle"
+                    cover
+                    class="hover-effect"
+                  ></v-img>
+                  <p :style="textStyle">
+                    {{ img.label }}
+                  </p>
+                </div>
+              </v-slide-group>
+            </v-container>
+            <p style="margin-bottom:0; text-align: center; font-size: 12px; color: gray">
+              可左右滑动查看更多
+            </p>
           </v-card>
         </v-tabs-window-item>
       </v-tabs-window>
@@ -302,4 +380,33 @@ textarea,
 select {
   font-size: 16px; /* iOS Safari 自动放大的临界点 */
 }
+
+.hover-effect:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+}
+
+.image-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 12px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.image-item:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+}
+
+.image-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 8px;
+  min-width: 100px; /* 保证滑动空间，图片越小越重要 */
+  flex-shrink: 0;
+}
+
 </style>
