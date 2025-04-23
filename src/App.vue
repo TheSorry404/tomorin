@@ -1,16 +1,11 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useMiniLiveIframe } from './dh_helper/miniLiveIframe'
-// import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 import UnityWebgl from 'unity-webgl'
-import UnityVue from 'unity-webgl/vue'
-// import { FabComponent as EjsFab } from '@syncfusion/ej2-vue-buttons'
-import ChatBox from './components/ChatBox.vue'
-import DigitalHuman from '@/dh_helper/controller.ts'
-import { getAndPlayAudio, playAudio } from '@/dh_helper/audio.ts'
+import DigitalHuman from '@/dh_controller/controller.ts'
+import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
 import { backendUrl, blobToBase64 } from './assets/utils/Global'
+import { ref } from 'vue'
 
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
@@ -50,30 +45,30 @@ const stopRecording = async () => {
   // 向后端发送请求
   // 将recordingBlob转换为base64
   const base64Recording = await blobToBase64(recordingBlob)
-  console.log('base64Recording: ', recordingBlob);
+  console.log('base64Recording: ', recordingBlob)
   // 获取建议
-    (async () => {
-      // 获取跳转建议
-      const response = await fetch(`${backendUrl}/voice_suggest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+  ;(async () => {
+    // 获取跳转建议
+    const response = await fetch(`${backendUrl}/voice_suggest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ recording: base64Recording }),
+    })
+    const data = await response.json()
+    console.log('Suggestions:', data)
+    if (data['suggestion'].length > 0) {
+      showSnackbar({
+        position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
+        jumpFun: () => {
+          console.log('跳转到:', data['suggestion'])
+          // todo
+          // Camera.moveTo(data['suggestion'])
         },
-        body: JSON.stringify({ recording: base64Recording }),
       })
-      const data = await response.json()
-      console.log('Suggestions:', data)
-      if (data['suggestion'].length > 0) {
-        showSnackbar({
-          position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
-          jumpFun: () => {
-            console.log('跳转到:', data['suggestion'])
-            // todo
-            Camera.moveTo(data['suggestion'])
-          },
-        })
-      }
-    })().then((r) => {})
+    }
+  })().then((r) => {})
 
   // 获取语音
   await fetch(`${backendUrl}/voice_ask`, {
@@ -92,14 +87,14 @@ const stopRecording = async () => {
         throw new Error(`上传失败，状态码：${response.status}`)
       }
     })
-    .then((data) => {
-      DigitalHuman.speakStream(data, dh.value)
+    .then(async (data) => {
+      await DigitalHuman.speakStream(data, dh.value)
+      isQuerying.value = false
     })
     .catch((error) => {
       console.error('上传过程中出错:', error)
       isQuerying.value = false
     })
-  isQuerying.value = false
 }
 
 const textFieldLoading = ref(false)
@@ -112,7 +107,7 @@ const sendTextMessage = async () => {
     console.log(dh.value)
     const dhIframe = dh.value
     try {
-      (async () => {
+      ;(async () => {
         // 获取跳转建议
         const response = await fetch(`${backendUrl}/suggest`, {
           method: 'POST',
@@ -152,6 +147,29 @@ const showSnackbar = ({ position, jumpFun }) => {
   jumping.value = jumpFun
   snackbar.value = true
 }
+
+/*   Google   */
+const googleMap = ref<HTMLElement | null>(null)
+
+const initialize = () => {
+  const fenway = { lat: 39.9999819, lng: 116.2754613 }
+  const map: google.maps.StreetViewPanorama = new google.maps.StreetViewPanorama(googleMap.value, {
+    position: fenway,
+    pov: {
+      heading: 34,
+      pitch: 10,
+    },
+  })
+}
+declare global {
+  interface Window {
+    google: any
+    map_initialize: () => void
+  }
+}
+
+// 向外暴露函数
+window.map_initialize = initialize
 </script>
 
 <style>
@@ -162,6 +180,8 @@ const showSnackbar = ({ position, jumpFun }) => {
 </style>
 
 <template>
+  <!--  Google视窗 fixed-->
+  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0;z-index:1" ref="googleMap"></div>
   <!--  Unity视窗 fixed-->
   <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
   <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
@@ -181,7 +201,8 @@ const showSnackbar = ({ position, jumpFun }) => {
   <v-card
     class="chat-box"
     width="90%"
-    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%)"
+    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);z-index:99999"
+    :loading="textFieldLoading || isQuerying"
   >
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
       <span style="margin-left: 10px">说话中...</span>
@@ -202,7 +223,7 @@ const showSnackbar = ({ position, jumpFun }) => {
             @touchend="stopRecording"
             style="width: 100%"
             variant="outlined"
-            :disabled="isQuerying"
+            :disabled="isQuerying || textFieldLoading"
           >
             按住说话
           </v-btn>
@@ -215,10 +236,13 @@ const showSnackbar = ({ position, jumpFun }) => {
               label="请输入..."
               variant="filled"
               auto-grow
-              :loading="textFieldLoading"
-              :disabled="textFieldLoading"
+              :loading="textFieldLoading || isQuerying"
+              :disabled="textFieldLoading || isQuerying"
             ></v-text-field>
-            <v-btn style="width: 100%" :disabled="textFieldLoading" @click="sendTextMessage"
+            <v-btn
+              style="width: 100%"
+              :disabled="textFieldLoading || isQuerying"
+              @click="sendTextMessage"
               >发送
             </v-btn>
           </v-card>
