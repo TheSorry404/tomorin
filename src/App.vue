@@ -309,7 +309,6 @@ const imageStyle = computed(() => {
                   <v-img
                     :src="img.src"
                     :alt="img.label"
-                    @error="(e) => (e.target.src = '/img/image.svg')"
                     :style="imageStyle"
                     cover
                     class="hover-effect"
@@ -321,7 +320,7 @@ const imageStyle = computed(() => {
               </v-slide-group>
             </v-container>
             <p style="margin-bottom:0; text-align: center; font-size: 12px; color: gray">
-              可左右滑动查看更多
+              左右滑动查看更多
             </p>
           </v-card>
         </v-tabs-window-item>
