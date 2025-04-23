@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
-import UnityWebgl from 'unity-webgl'
+// import UnityWebgl from 'unity-webgl'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
@@ -11,17 +11,18 @@ import { Camera } from '@/camera_controller/Camera'
 
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
-const unityContext = new UnityWebgl({
-  loaderUrl: 'https://acacos-cdn.syan.wang/WebGL.loader.js',
-  dataUrl: 'https://acacos-cdn.syan.wang/WebGL.data',
-  frameworkUrl: 'https://acacos-cdn.syan.wang/WebGL.framework.js',
-  codeUrl: 'https://acacos-cdn.syan.wang/WebGL.wasm',
-}) // Check before release, if in need it could be a OSS/COS address
+// const unityContext = new UnityWebgl({
+//   loaderUrl: 'https://acacos-cdn.syan.wang/WebGL.loader.js',
+//   dataUrl: 'https://acacos-cdn.syan.wang/WebGL.data',
+//   frameworkUrl: 'https://acacos-cdn.syan.wang/WebGL.framework.js',
+//   codeUrl: 'https://acacos-cdn.syan.wang/WebGL.wasm',
+// })
+// // Check before release, if in need it could be a OSS/COS address
 
-unityContext.addUnityListener('gameStart', (msg) => {
-  alert(msg)
-  console.log('gameStart : ', msg)
-})
+// unityContext.addUnityListener('gameStart', (msg) => {
+//   alert(msg)
+//   console.log('gameStart : ', msg)
+// })
 /// 和iframe通信
 const dh = ref()
 /*       聊天框相关控件       */
@@ -175,9 +176,9 @@ const showSnackbar = ({ position, jumpFun }) => {
  * */
 const googleMap = ref<HTMLElement | null>(null)
 const positions = getPosition()
-console.log("POSITION:",positions)
+console.log('POSITION:', positions)
 const camera = new Camera()
-console.log("camera",camera)
+console.log('camera', camera)
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
   camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
@@ -243,10 +244,12 @@ const imageStyle = computed(() => {
     style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"
     ref="googleMap"
   ></div>
+
   <!--  Unity视窗 fixed-->
   <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
   <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
   <!--  </div>-->
+
   <!--  数字人窗口  -->
   <div ref="iframeContainer" class="draggable-container">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
@@ -258,6 +261,7 @@ const imageStyle = computed(() => {
     >
     </iframe>
   </div>
+
   <!--  聊天窗口  -->
   <v-card
     class="chat-box"
@@ -305,7 +309,7 @@ const imageStyle = computed(() => {
               style="width: 100%"
               :disabled="textFieldLoading || isQuerying"
               @click="sendTextMessage"
-            >发送
+              >发送
             </v-btn>
             <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
           </v-card>
