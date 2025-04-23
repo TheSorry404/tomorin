@@ -6,7 +6,6 @@ import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
 import { backendUrl, blobToBase64, getPosition } from './assets/utils/Global'
 import { computed, onMounted, ref } from 'vue'
-import { tr } from 'vuetify/locale'
 import { Camera } from '@/camera_controller/Camera'
 
 /*       数字人控制       */
@@ -65,8 +64,7 @@ const stopRecording = async () => {
         position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
         jumpFun: () => {
           console.log('跳转到:', data['suggestion'])
-          // todo
-          // Camera.moveTo(data['suggestion'])
+          camera.moveTo(data['suggestion'])
         },
       })
     }
@@ -105,7 +103,6 @@ const sendTextMessage = async () => {
   if (message.value !== '') {
     // 发送消息
     console.log('发送消息:', message.value)
-    message.value = '' // 清空输入框
     textFieldLoading.value = true
     console.log(dh.value)
     const dhIframe = dh.value
@@ -125,8 +122,7 @@ const sendTextMessage = async () => {
           showSnackbar({
             position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
             jumpFun: () => {
-              console.log('跳转到:', data['suggestion'])
-              // todo
+              camera.moveTo(data['suggestion'])
             },
           })
         }
@@ -135,6 +131,7 @@ const sendTextMessage = async () => {
       message.value = '' // 清空输入框
     } catch (e) {
       console.error('获取音频失败:', e)
+      message.value = '' // 清空输入框
       alert('服务器忙或服务器未启动，请稍后再试')
     }
     textFieldLoading.value = false
@@ -164,8 +161,24 @@ const handleRecommendationClick = (action: string) => {
 const snackbar = ref(false)
 const suggested_position = ref('')
 const jumping = ref(() => {})
-const showSnackbar = ({ position, jumpFun }) => {
-  suggested_position.value = position
+// const suggested_position_name = ref('')
+// const loadSuggestion = async () => {
+//   suggested_position_name.value = (await getPosition()).find(
+//     (item) => item.action === suggested_position,
+//   )
+// }
+const showSnackbar = async ({ position, jumpFun }) => {
+  if (position === 'None') {
+    console.log('建议为空')
+    return
+  }
+  const positions = camera.POSITIONS
+  for (let pos of positions) {
+    if (pos.action === position) {
+      suggested_position.value = pos.name
+      break
+    }
+  }
   jumping.value = jumpFun
   snackbar.value = true
 }
@@ -174,10 +187,10 @@ const showSnackbar = ({ position, jumpFun }) => {
  * Google
  * */
 const googleMap = ref<HTMLElement | null>(null)
-const positions = getPosition()
-console.log("POSITION:",positions)
+// const positions = getPosition()
+// console.log("POSITION:",positions)
 const camera = new Camera()
-console.log("camera",camera)
+console.log('camera', camera)
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
   camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
@@ -305,9 +318,8 @@ const imageStyle = computed(() => {
               style="width: 100%"
               :disabled="textFieldLoading || isQuerying"
               @click="sendTextMessage"
-            >发送
+              >发送
             </v-btn>
-            <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
           </v-card>
         </v-tabs-window-item>
         <!--        推荐-->
@@ -342,9 +354,9 @@ const imageStyle = computed(() => {
       </v-tabs-window>
     </v-card-text>
   </v-card>
-  <v-snackbar v-model="snackbar">
+  <v-snackbar v-model="snackbar" style="z-index: 100000">
     <p>建议前往 {{ suggested_position }}</p>
-    <v-btn variant="text" style="width: 100%">带我去吧</v-btn>
+    <v-btn variant="text" style="width: 100%" @click="jumping">带我去吧</v-btn>
     <template v-slot:actions>
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>

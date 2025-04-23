@@ -6,27 +6,27 @@
     "action": "go_shoupiaochu"
   },
   {
-    "name": "华中游",
-    "latitude": 39.9989406,
-    "longitude": 116.2645878,
+    "name": "画中游",
+    "latitude": 39.99894,
+    "longitude": 116.270866,
     "action": "go_huazhongyou"
   },
   {
     "name": "长廊",
-    "latitude": 39.9989406,
-    "longitude": 116.2645878,
+    "latitude": 39.9988394,
+    "longitude": 116.279499,
     "action": "go_changlang"
   },
   {
     "name": "文昌阁",
-    "latitude": 39.9989406,
-    "longitude": 116.2645878,
+    "latitude": 39.9967084,
+    "longitude": 116.2798132,
     "action": "go_wenchangge"
   },
   {
     "name": "昆明湖",
-    "latitude": 39.9931629,
-    "longitude": 116.2725099,
+    "latitude": 39.9855055,
+    "longitude": 116.2716459,
     "action": "go_kunminghu"
   }
 ]
