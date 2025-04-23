@@ -10,6 +10,7 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { backendUrl } from '@/assets/utils/Global'
 
 // Registering Syncfusion<sup style="font-size:70%">&reg;</sup> license key
 registerLicense(
@@ -28,5 +29,11 @@ app.use(router)
 app.use(vuetify)
 
 app.mount('#app')
+
+const script = document.createElement('script')
+script.src = `${backendUrl}/google_map.js`
+script.async = true
+script.defer = true
+document.head.appendChild(script)
 
 // createApp(App).mount('#app')

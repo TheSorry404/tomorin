@@ -6,6 +6,8 @@ import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
 import { backendUrl, blobToBase64 } from './assets/utils/Global'
 import { computed, onMounted, ref } from 'vue'
+import { tr } from 'vuetify/locale'
+import { Camera } from '@/camera_controller/Camera'
 
 /*       数字人控制       */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
@@ -141,21 +143,24 @@ const sendTextMessage = async () => {
 
 /**
  * 推荐显示窗
-* */
-
+ * */
 const recommendationImages = [
-  {src:'/img/售票处.jpg',label:'售票处'},
-  {src:'/img/文昌阁.jpg',label:'文昌阁'},
-  {src:'/img/昆明湖.jpg',label:'昆明湖'},
-  {src:'/img/画中游.jpg',label:'画中游'},
-  {src:'/img/长廊.jpg',label:'长廊'},
-  {src:'/img/敬请期待.svg',label:'到底啦~'},
+  { src: '/img/售票处.jpg', label: '售票处', action: 'go_shoupiaochu' },
+  { src: '/img/文昌阁.jpg', label: '文昌阁', action: 'go_wenchangge' },
+  { src: '/img/昆明湖.jpg', label: '昆明湖', action: 'go_kunminghu' },
+  { src: '/img/画中游.jpg', label: '画中游', action: 'go_huazhongyou' },
+  { src: '/img/长廊.jpg', label: '长廊', action: 'go_changlang' },
+  // {src:'/img/敬请期待.svg',label:'到底啦~'},
 ]
 
-const handleRecommendationClick = (label: string) => {
-  console.log('点击了图片：', label)
+const handleRecommendationClick = (action: string) => {
+  console.log('执行操作：', action)
+  camera.moveTo(action)
 }
-/*       提示       */
+
+/**
+ * 提示
+ * */
 const snackbar = ref(false)
 const suggested_position = ref('')
 const jumping = ref(() => {})
@@ -165,19 +170,28 @@ const showSnackbar = ({ position, jumpFun }) => {
   snackbar.value = true
 }
 
-/*   Google   */
+/**
+ * Google
+ * */
 const googleMap = ref<HTMLElement | null>(null)
-
+const camera = new Camera()
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
-  const map: google.maps.StreetViewPanorama = new google.maps.StreetViewPanorama(googleMap.value, {
+  camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
     position: fenway,
     pov: {
       heading: 34,
       pitch: 10,
     },
+    linksControl: true,
+    panControl: false,
+    enableCloseButton: false,
+    fullscreenControl: false,
+    addressControl: false,
+    zoomControl: false,
   })
 }
+
 declare global {
   interface Window {
     google: any
@@ -211,7 +225,6 @@ const imageStyle = computed(() => {
     transition: 'box-shadow 0.3s ease, transform 0.3s ease',
   }
 })
-
 </script>
 
 <style>
@@ -223,7 +236,10 @@ const imageStyle = computed(() => {
 
 <template>
   <!--  Google视窗 fixed-->
-  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0;z-index:1" ref="googleMap"></div>
+  <div
+    style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"
+    ref="googleMap"
+  ></div>
   <!--  Unity视窗 fixed-->
   <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
   <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
@@ -243,7 +259,7 @@ const imageStyle = computed(() => {
   <v-card
     class="chat-box"
     width="90%"
-    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);z-index:99999"
+    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 99999"
     :loading="textFieldLoading || isQuerying"
   >
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
@@ -264,7 +280,7 @@ const imageStyle = computed(() => {
             @mouseup="stopRecording"
             @touchstart="startRecording"
             @touchend="stopRecording"
-            style="width: 100%"
+            style="width: 100%;user-select: none"
             variant="outlined"
             :disabled="isQuerying || textFieldLoading"
           >
@@ -291,20 +307,16 @@ const imageStyle = computed(() => {
             <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
           </v-card>
         </v-tabs-window-item>
-<!--        推荐-->
+        <!--        推荐-->
         <v-tabs-window-item value="three">
           <v-card>
             <v-container fluid>
-              <v-slide-group
-                show-arrows="false"
-                center-active
-                mandatory
-              >
+              <v-slide-group center-active mandatory>
                 <div
                   v-for="(img, index) in recommendationImages"
                   :key="index"
                   class="image-item"
-                  @click="handleRecommendationClick(img.label)"
+                  @click="handleRecommendationClick(img.action)"
                 >
                   <v-img
                     :src="img.src"
@@ -319,7 +331,7 @@ const imageStyle = computed(() => {
                 </div>
               </v-slide-group>
             </v-container>
-            <p style="margin-bottom:0; text-align: center; font-size: 12px; color: gray">
+            <p style="margin-bottom: 0; text-align: center; font-size: 12px; color: gray">
               左右滑动查看更多
             </p>
           </v-card>
@@ -407,5 +419,4 @@ select {
   min-width: 100px; /* 保证滑动空间，图片越小越重要 */
   flex-shrink: 0;
 }
-
 </style>

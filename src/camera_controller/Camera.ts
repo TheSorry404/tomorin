@@ -11,26 +11,24 @@
 //   {"type": "function", "function": {"name": "go_kunminghu", "description": "切换到地点：昆明湖"}}
 // ]
 class Position {
-  constructor(latitude: number, longitude: number) {}
+  private readonly latitude: number
+  private readonly longitude: number
 
-  private latitude: number | undefined
-  private longitude: number | undefined
-
-  public get getLatitude() {
-    return this.latitude
-  }
-
-  public get getLongitude() {
-    return this.longitude
-  }
-
-  Position(latitude: number, longitude: number) {
+  constructor(latitude: number, longitude: number) {
     this.latitude = latitude
     this.longitude = longitude
   }
+
+  public getLatitude(): number {
+    return this.latitude
+  }
+
+  public getLongitude(): number {
+    return this.longitude
+  }
 }
 
-const getLocation = (action_name: string) => {
+const getPosition = (action_name: string) => {
   if (action_name === 'go_shoupiaochu') {
     return new Position(39.9981931, 116.2808454)
   } else if (action_name === 'go_huazhongyou') {
@@ -46,9 +44,14 @@ const getLocation = (action_name: string) => {
   }
 }
 
-class Camera {
-  moveTo(position: Position) {
+export class Camera {
+  public map: any
+  public moveTo(action_name: string) {
+    let position: Position = getPosition(action_name)
     console.log('Move to position:', position)
-
+    this.map.setPosition({
+      lat: position.getLatitude(),
+      lng: position.getLongitude(),
+    })
   }
 }

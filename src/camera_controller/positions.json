@@ -1,0 +1,42 @@
+[
+  {
+    "name": "售票处",
+    "position": {
+      "latitude": 39.9981931,
+      "longitude": 116.2808454
+    },
+    "action": "go_shoupiaochu"
+  },
+  {
+    "name": "华中游",
+    "position": {
+      "latitude": 39.9989406,
+      "longitude": 116.2645878
+    },
+    "action": "go_huazhongyou"
+  },
+  {
+    "name": "长廊",
+    "position": {
+      "latitude": 39.9989406,
+      "longitude": 116.2645878
+    },
+    "action": "go_changlang"
+  },
+  {
+    "name": "文昌阁",
+    "position": {
+      "latitude": 39.9989406,
+      "longitude": 116.2645878
+    },
+    "action": "go_wenchangge"
+  },
+  {
+    "name": "昆明湖",
+    "position": {
+      "latitude": 39.9931629,
+      "longitude": 116.2725099
+    },
+    "action": "go_kunminghu"
+  }
+]
