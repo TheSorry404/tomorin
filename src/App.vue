@@ -4,7 +4,7 @@ import UnityWebgl from 'unity-webgl'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from './assets/utils/MicRecorder'
-import { backendUrl, blobToBase64 } from './assets/utils/Global'
+import { backendUrl, blobToBase64, getPosition } from './assets/utils/Global'
 import { computed, onMounted, ref } from 'vue'
 import { tr } from 'vuetify/locale'
 import { Camera } from '@/camera_controller/Camera'
@@ -174,7 +174,10 @@ const showSnackbar = ({ position, jumpFun }) => {
  * Google
  * */
 const googleMap = ref<HTMLElement | null>(null)
+const positions = getPosition()
+console.log("POSITION:",positions)
 const camera = new Camera()
+console.log("camera",camera)
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
   camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
@@ -280,7 +283,7 @@ const imageStyle = computed(() => {
             @mouseup="stopRecording"
             @touchstart="startRecording"
             @touchend="stopRecording"
-            style="width: 100%;user-select: none"
+            style="width: 100%; user-select: none"
             variant="outlined"
             :disabled="isQuerying || textFieldLoading"
           >
@@ -302,7 +305,7 @@ const imageStyle = computed(() => {
               style="width: 100%"
               :disabled="textFieldLoading || isQuerying"
               @click="sendTextMessage"
-              >发送
+            >发送
             </v-btn>
             <v-btn style="width: 100%" @click="sendTextMessage">发送</v-btn>
           </v-card>

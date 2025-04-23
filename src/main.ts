@@ -31,7 +31,7 @@ app.use(vuetify)
 app.mount('#app')
 
 const script = document.createElement('script')
-script.src = `${backendUrl}/google_map.js`
+script.src = `${backendUrl}/google_map.js `
 script.async = true
 script.defer = true
 document.head.appendChild(script)
