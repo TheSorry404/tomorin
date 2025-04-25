@@ -36,19 +36,21 @@ const pageLoading = ref(true)
 const pageLoadProgress = ref(0)
 let progress = 0
 const loadingProgress = setInterval(() => {
+  // console.log(dh.value)
   try {
-    progress = dh.value.contentWindow.getDhLoadingProgress()
+    progress = dh.value.contentWindow.dhLoadingProgress
+    // console.log('从Iframe中获取到：', progress)
   } catch (e) {
     progress = 0
   }
-  console.log('progress:', progress)
+  // console.log('progress:', progress)
   // 如果progress为1则移除当前interval
   pageLoadProgress.value = progress
   if (progress === 1) {
     pageLoading.value = false
     clearInterval(loadingProgress)
   }
-}, 1)
+}, 10)
 
 const dh = ref()
 /*       聊天框相关控件       */
