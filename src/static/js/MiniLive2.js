@@ -486,7 +486,11 @@ function render(mat_world, subPoints, bsArray) {
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels_fbo);
 }
 
+let dhLoadingProgress = 0
 
+var getDhLoadingProgress = () => {
+  return dhLoadingProgress
+}
 
 async function processVideoFrames() {
     if (isPaused) {
@@ -499,6 +503,7 @@ async function processVideoFrames() {
         setTimeout(processVideoFrames, 100); // 等待100毫秒后再次检查
         return;
     }
+    dhLoadingProgress = videoProcessor.videoFrames.length / videoProcessor.nbSampleTotal
     if (frameIndex >= videoProcessor.videoFrames.length) {
         frameIndex = 0; // 重新开始
     }

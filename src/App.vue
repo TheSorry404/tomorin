@@ -23,6 +23,12 @@ const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = u
 //   console.log('gameStart : ', msg)
 // })
 /// 和iframe通信
+
+/**
+ * 遮罩层
+ */
+const pageLoading = ref(true)
+
 const dh = ref()
 /*       聊天框相关控件       */
 const recorder = new MicRecorder()
@@ -124,6 +130,7 @@ const sendTextMessage = async () => {
             position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
             jumpFun: () => {
               camera.moveTo(data['suggestion'])
+              snackbar.value = false
             },
           })
         }
@@ -191,14 +198,14 @@ const googleMap = ref<HTMLElement | null>(null)
 // const positions = getPosition()
 // console.log("POSITION:",positions)
 const camera = new Camera()
-console.log("camera",camera)
+console.log('camera', camera)
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
   camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
     position: fenway,
     pov: {
-      heading: 34,
-      pitch: 10,
+      heading: 0,
+      pitch: 0,
     },
     linksControl: true,
     panControl: false,
@@ -242,6 +249,7 @@ const imageStyle = computed(() => {
     transition: 'box-shadow 0.3s ease, transform 0.3s ease',
   }
 })
+
 </script>
 
 <style>
@@ -264,7 +272,7 @@ const imageStyle = computed(() => {
   <!--  </div>-->
 
   <!--  数字人窗口  -->
-  <div ref="iframeContainer" class="draggable-container">
+  <div ref="iframeContainer" class="draggable-container" style="z-index: 2">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
       ref="dh"
@@ -278,14 +286,14 @@ const imageStyle = computed(() => {
   <!--  聊天窗口  -->
   <v-card
     class="chat-box"
-    width="90%"
-    style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 99999"
+    width="100%"
+    style="position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); z-index: 2"
     :loading="textFieldLoading || isQuerying"
   >
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
       <span style="margin-left: 10px">说话中...</span>
     </v-alert>
-    <v-tabs v-model="tab" bg-color="primary" height="30px">
+    <v-tabs v-model="tab" bg-color="black" height="30px">
       <v-tab value="one">语音</v-tab>
       <v-tab value="two">文字</v-tab>
       <v-tab value="three">推荐</v-tab>
@@ -322,7 +330,7 @@ const imageStyle = computed(() => {
               style="width: 100%"
               :disabled="textFieldLoading || isQuerying"
               @click="sendTextMessage"
-            >发送
+              >发送
             </v-btn>
           </v-card>
         </v-tabs-window-item>
@@ -365,8 +373,17 @@ const imageStyle = computed(() => {
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>
   </v-snackbar>
+  <v-overlay :model-value="pageLoading" class="align-center justify-center">
+    <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
+  </v-overlay>
+  <v-btn @click="testClick()" style="z-index: 10000">
+    123123
+  </v-btn>
 </template>
-
+<script lang="ts">
+const testClick = ()=>{
+  console.log((window as any).getDhLoadingProgress())
+}</script>
 <style scoped>
 .draggable-container {
   position: absolute;

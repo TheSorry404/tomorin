@@ -28,7 +28,7 @@ app.use(router)
 
 app.use(vuetify)
 
-app.mount('#app')
+app.mount('#app');
 
 const script = document.createElement('script')
 script.src = `${backendUrl}/google_map.js `
