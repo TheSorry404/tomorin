@@ -129,32 +129,9 @@
   </style>
 </head>
 <body>
-<!--<figure id="loadingSpinner">-->
-<!--    <strong>MiniMates: loading...</strong>-->
-<!--</figure>-->
 <canvas id="canvasEl"></canvas>
 <canvas id="canvas_video"></canvas>
 <canvas id="canvas_gl" width="128" height="128"></canvas>
-<!--<div id="screen"></div>-->
-<!--<div id="startMessage">加载中</div>-->
-<!--<button onclick="handleClick()" style="position: fixed; top: 20px; right: 20px;">-->
-<!--  TEST-->
-<!--</button>-->
-<!--<button onclick="myTest()" style="position: fixed; top: 60px; right: 20px;">-->
-<!--  TEST_SAMPLE-->
-<!--</button>-->
-<script type="module">
-  import DigitalHuman from './src/dh_controller/controller.js'
-
-  const video = document.getElementById('myVideo')
-
-  video.addEventListener('loadedmetadata', () => {
-    const ratio = video.videoHeight / video.videoWidth
-    window.parent.postMessage({ type: 'video-ratio', ratio }, '*')
-  })
-</script>
-<!--    <script src="js/pako.min.js"></script>-->
-<!--    <script src="js/mp4box.all.min.js"></script>-->
 <script src="https://cdn.jsdelivr.net/npm/mp4box@0.5.2/dist/mp4box.all.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pako@2.0.4/dist/pako.min.js"></script>
 <script src="src/static/js/DHLiveMini.js"></script>

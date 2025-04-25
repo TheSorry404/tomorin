@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 export function useMiniLiveIframe() {
   const iframeSrc = ref('/MiniLive.html')
   const iframeContainer = ref<HTMLIFrameElement | null>(null)
-  const iframeWidth = ref(100)
+  const iframeWidth = ref(101.5)
   const iframeHeight = ref(180)
 
   let isDragging = false

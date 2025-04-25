@@ -8,7 +8,9 @@ import { backendUrl, blobToBase64, getPosition } from './assets/utils/Global'
 import { computed, onMounted, ref } from 'vue'
 import { Camera } from '@/camera_controller/Camera'
 
-/*       数字人控制       */
+/**
+ * 数字人
+ */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
 // const unityContext = new UnityWebgl({
 //   loaderUrl: 'https://acacos-cdn.syan.wang/WebGL.loader.js',
@@ -249,7 +251,6 @@ const imageStyle = computed(() => {
     transition: 'box-shadow 0.3s ease, transform 0.3s ease',
   }
 })
-
 </script>
 
 <style>
@@ -376,14 +377,7 @@ const imageStyle = computed(() => {
   <v-overlay :model-value="pageLoading" class="align-center justify-center">
     <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
   </v-overlay>
-  <v-btn @click="testClick()" style="z-index: 10000">
-    123123
-  </v-btn>
 </template>
-<script lang="ts">
-const testClick = ()=>{
-  console.log((window as any).getDhLoadingProgress())
-}</script>
 <style scoped>
 .draggable-container {
   position: absolute;
