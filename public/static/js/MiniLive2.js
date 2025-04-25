@@ -500,13 +500,14 @@ async function processVideoFrames() {
     // 检查视频帧是否已经解码完成
     if (videoProcessor.videoFrames.length === 0 || videoProcessor.videoFrames.length < videoProcessor.nbSampleTotal) {
         console.log('Waiting for video frames to load...', videoProcessor.videoFrames.length, videoProcessor.nbSampleTotal);
+      dhLoadingProgress = videoProcessor.videoFrames.length / videoProcessor.nbSampleTotal
         setTimeout(processVideoFrames, 100); // 等待100毫秒后再次检查
         return;
     }
-    dhLoadingProgress = videoProcessor.videoFrames.length / videoProcessor.nbSampleTotal
     if (frameIndex >= videoProcessor.videoFrames.length) {
         frameIndex = 0; // 重新开始
     }
+  dhLoadingProgress = 1
     const { img, duration, timestamp } = videoProcessor.videoFrames[frameIndex];
     ctx_video.drawImage(img, 0, 0, canvas_video.width, canvas_video.height);
 

@@ -1,6 +1,6 @@
 import controller from './controller.ts'
 import DigitalHuman from './controller.ts'
-import { backendUrl } from '../assets/utils/Global'
+import { backendUrl } from '@/utils/Global'
 
 // 定义返回数据的类型
 interface StreamChunk {

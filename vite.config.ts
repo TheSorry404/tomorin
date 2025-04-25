@@ -10,10 +10,13 @@ import tailwindcss from '@tailwindcss/vite'
 // import { createVuetify } from 'vuetify'
 // import * as components from 'vuetify/components'
 // import * as directives from 'vuetify/directives'
-import fs from 'fs';
+import fs from 'fs'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    outDir: 'dist', // 这里设置输出目录
+  },
   assetsInclude: ['**/*.wasm'],
   plugins: [vue(), vueJsx(), vueDevTools(), tailwindcss()],
   resolve: {
@@ -30,4 +33,3 @@ export default defineConfig({
     port: 5173,
   },
 })
-

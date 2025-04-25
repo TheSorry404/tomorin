@@ -10,7 +10,7 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { backendUrl } from '@/assets/utils/Global'
+import { backendUrl } from '@/utils/Global'
 
 // Registering Syncfusion<sup style="font-size:70%">&reg;</sup> license key
 registerLicense(

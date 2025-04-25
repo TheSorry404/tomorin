@@ -44,7 +44,7 @@
 //   }
 // }
 
-import { getPosition } from '@/assets/utils/Global'
+import { getPosition } from '@/utils/Global'
 
 interface Position {
   name: string

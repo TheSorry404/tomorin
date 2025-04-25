@@ -3,10 +3,11 @@ import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 // import UnityWebgl from 'unity-webgl'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
-import MicRecorder from './assets/utils/MicRecorder'
-import { backendUrl, blobToBase64, getPosition } from './assets/utils/Global'
+import MicRecorder from '@/utils/MicRecorder'
+import { backendUrl, blobToBase64, getPosition } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
 import { Camera } from '@/camera_controller/Camera'
+import { ca } from 'vuetify/locale'
 
 /**
  * 数字人
@@ -30,6 +31,22 @@ const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = u
  * 遮罩层
  */
 const pageLoading = ref(true)
+const pageLoadProgress = ref(0)
+let progress = 0
+const loadingProgress = setInterval(() => {
+  try {
+    progress = dh.value.contentWindow.getDhLoadingProgress()
+  } catch (e) {
+    progress = 0
+  }
+  console.log('progress:', progress)
+  // 如果progress为1则移除当前interval
+  pageLoadProgress.value = progress
+  if (progress === 1) {
+    pageLoading.value = false
+    clearInterval(loadingProgress)
+  }
+}, 1)
 
 const dh = ref()
 /*       聊天框相关控件       */
@@ -374,8 +391,9 @@ const imageStyle = computed(() => {
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>
   </v-snackbar>
-  <v-overlay :model-value="pageLoading" class="align-center justify-center">
-    <v-progress-circular color="primary" size="64" indeterminate></v-progress-circular>
+<!--  遮罩层-->
+  <v-overlay :model-value="pageLoading" class="align-center justify-center" style="z-index: 999999" >
+    <v-progress-circular indeterminate color="white" />
   </v-overlay>
 </template>
 <style scoped>
