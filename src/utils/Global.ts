@@ -15,7 +15,7 @@ export const blobToBase64 = (blob: Blob) => {
 }
 
 export const getPosition = async () => {
-  const url = `/src/positions.json`
+  const url = `/positions.json`
   const headers = {
     'Content-Type': 'application/json',
   }

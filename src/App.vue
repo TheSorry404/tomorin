@@ -1,13 +1,15 @@
 <script setup lang="ts">
+import type { CSSProperties } from 'vue'
+
+declare const google: any
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 // import UnityWebgl from 'unity-webgl'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from '@/utils/MicRecorder'
-import { backendUrl, blobToBase64, getPosition } from '@/utils/Global'
+import { backendUrl, blobToBase64 } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
 import { Camera } from '@/camera_controller/Camera'
-import { ca } from 'vuetify/locale'
 
 /**
  * 数字人
@@ -92,9 +94,9 @@ const stopRecording = async () => {
           console.log('跳转到:', data['suggestion'])
           camera.moveTo(data['suggestion'])
         },
-      })
+      }).then()
     }
-  })().then((r) => {})
+  })().then(() => {})
 
   // 获取语音
   await fetch(`${backendUrl}/voice_ask`, {
@@ -151,9 +153,9 @@ const sendTextMessage = async () => {
               camera.moveTo(data['suggestion'])
               snackbar.value = false
             },
-          })
+          }).then()
         }
-      })().then((r) => {})
+      })().then(() => {})
       await getAndPlayAudio(message.value, dhIframe)
       message.value = '' // 清空输入框
     } catch (e) {
@@ -194,7 +196,7 @@ const jumping = ref(() => {})
 //     (item) => item.action === suggested_position,
 //   )
 // }
-const showSnackbar = async ({ position, jumpFun }) => {
+const showSnackbar = async ({ position, jumpFun }: { position: string; jumpFun: () => void }) => {
   if (position === 'None') {
     console.log('建议为空')
     return
@@ -252,7 +254,7 @@ onMounted(() => {
 })
 
 // 文本样式
-const textStyle = computed(() => ({
+const textStyle = computed<CSSProperties>(() => ({
   marginTop: '4px',
   textAlign: 'center',
   fontSize: isMobile.value ? '14px' : '16px',
@@ -294,7 +296,6 @@ const imageStyle = computed(() => {
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
       ref="dh"
-      frameborder="0"
       :src="iframeSrc"
       :style="{ width: iframeWidth + 'px', height: iframeHeight + 'px' }"
     >
@@ -369,7 +370,7 @@ const imageStyle = computed(() => {
                     :style="imageStyle"
                     cover
                     class="hover-effect"
-                  ></v-img>
+                  />
                   <p :style="textStyle">
                     {{ img.label }}
                   </p>
@@ -391,8 +392,8 @@ const imageStyle = computed(() => {
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>
   </v-snackbar>
-<!--  遮罩层-->
-  <v-overlay :model-value="pageLoading" class="align-center justify-center" style="z-index: 999999" >
+  <!--  遮罩层-->
+  <v-overlay :model-value="pageLoading" class="align-center justify-center" style="z-index: 999999">
     <v-progress-circular indeterminate color="white" />
   </v-overlay>
 </template>
@@ -409,18 +410,11 @@ const imageStyle = computed(() => {
   will-change: transform;
 }
 
-.draggable-container.dragging {
-  transform: scale(1.02);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  cursor: grabbing;
-  opacity: 0.95;
-}
-
 /* 👇 遮罩层，透明且覆盖整个 iframe 区域，负责触发拖动事件 */
 .drag-overlay {
   position: fixed;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   cursor: grab;
@@ -429,11 +423,6 @@ const imageStyle = computed(() => {
 
 html,
 body,
-#app {
-  height: 100%;
-  overflow: hidden; /* 关键：防止多余滚动 */
-}
-
 input,
 textarea,
 select {

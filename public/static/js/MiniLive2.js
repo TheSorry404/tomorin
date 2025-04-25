@@ -1,3 +1,25 @@
+// 判断是否为iOS系统
+const tag_ios = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+// 判断iOS版本是否是17以上
+let tag_ios17 = false;
+if (tag_ios) {
+    // 从用户代理中提取iOS版本号
+    const match = navigator.userAgent.match(/OS (\d+)_(\d+)_?(\d+)?/);
+    if (match && match[1]) {
+        const iosVersion = parseInt(match[1], 10);
+        tag_ios17 = iosVersion >= 17;
+
+        if (!tag_ios17) {
+            alert("iOS系统目前不支持iOS17以下版本，请升级后再试");
+        }
+    } else {
+        // 无法获取版本号的情况
+        alert("无法检测您的iOS版本，请确保使用iOS17或更高版本");
+    }
+}
+
 let fps_enabled = true; // 全局参数，控制是否显示FPS
 let frameTimes = []; // 用于存储最近几帧的时间戳
 let ctxEl = canvasEl.getContext("2d");
@@ -16,6 +38,8 @@ class VideoProcessor {
         this.mp4box.onSamples = this.handleSamples.bind(this);
 
         this.combinedData = null;
+        this.offscreenCanvas = null;
+        this.offscreenCtx = null;
     }
 
     async init(videoUrl, gzipUrl) {
@@ -50,16 +74,9 @@ class VideoProcessor {
     async fetchVideoUtilData(gzipUrl) {
         // 从服务器加载 Gzip 压缩的 JSON 文件
         const response = await fetch(gzipUrl);
-        // const contentEncoding = response.headers.get('Content-Encoding');
-        // const contentType = response.headers.get('Content-Type');
-        // console.log(`Content-Encoding: ${contentEncoding}`);
-        // console.log(`Content-Type: ${contentType}`);
-
-        // const compressedData = await response.arrayBuffer();
-        // const decompressedData = pako.inflate(new Uint8Array(compressedData), { to: 'string' });
-        // console.log(decompressedData)
-        // console.log(await response.json());
-        this.combinedData = await response.json();
+        const compressedData = await response.arrayBuffer();
+        const decompressedData = pako.inflate(new Uint8Array(compressedData), { to: 'string' });
+        this.combinedData = JSON.parse(decompressedData);
     }
 
 
@@ -76,6 +93,10 @@ class VideoProcessor {
 
         canvasEl.width = videoW;
         canvasEl.height = videoH;
+
+        this.offscreenCanvas = new OffscreenCanvas(videoW, videoH);
+        this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false }); // 禁用 Alpha
+
 
         this.videoDecoder = new VideoDecoder({
             output: this.handleVideoFrame.bind(this),
@@ -94,7 +115,37 @@ class VideoProcessor {
     }
 
     handleVideoFrame(videoFrame) {
-        createImageBitmap(videoFrame).then(img => {
+        if (tag_ios17)
+        {
+            createImageBitmap(videoFrame).then(img => {
+                this.offscreenCtx.fillStyle = 'white';
+                this.offscreenCtx.fillRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+                this.offscreenCtx.drawImage(img, 0, 0);
+                return this.offscreenCanvas.convertToBlob({ type: 'image/jpeg', quality: 0.8 });
+            }).then(blob => {
+                const sizeInMB = (blob.size / (1024 * 1024)).toFixed(2); // 保留两位小数
+                console.log('Blob size:', `${sizeInMB} MB`);
+                this.videoFrames.push({
+                    blob,
+                    duration: videoFrame.duration,
+                    timestamp: videoFrame.timestamp
+                });
+
+                videoFrame.close();
+
+                // 添加逆序帧逻辑
+                if (this.videoFrames.length === this.nbSampleTotal && !this.isReverseAdded) {
+
+                    this.sortVideoFrames();
+                    this.videoFrames.push(...[...this.videoFrames].reverse());
+                    this.isReverseAdded = true;
+                    console.log(`Total frames: ${this.videoFrames.length}`);
+                }
+            });
+        }
+        else
+        {
+            createImageBitmap(videoFrame).then(img => {
             this.videoFrames.push({
                 img,
                 duration: videoFrame.duration,
@@ -113,6 +164,7 @@ class VideoProcessor {
                 console.log(`Total frames: ${this.videoFrames.length}`);
             }
         });
+        }
     }
 
     handleSamples(trackId, ref, samples) {
@@ -151,6 +203,26 @@ class VideoProcessor {
 
 let asset_dir = "assets";
 let isPaused = false; // 标志位，控制是否暂停处理
+// 获取 characterDropdown 元素
+const characterDropdown = document.getElementById('characterDropdown');
+
+// 检查元素是否存在
+if (characterDropdown) {
+    characterDropdown.addEventListener('change', async function() {
+        isPaused = true;
+        document.getElementById('startMessage').style.display = 'block';
+        asset_dir = this.value;
+        console.log('Selected character:', asset_dir);
+        await videoProcessor.init(asset_dir + "/01.mp4", asset_dir + "/combined_data.json.gz");
+        await loadCombinedData();
+        await setupVertsBuffers();
+        isPaused = false;
+        // 启动绘制循环
+        await processVideoFrames();
+    });
+} else {
+    console.warn("characterDropdown 元素未找到，无法绑定事件监听器");
+}
 // 初始化处理器
 const videoProcessor = new VideoProcessor();
 
@@ -388,7 +460,7 @@ async function init_gl() {
             gl.activeTexture(gl.TEXTURE0);
             gl.uniform1i(gl.getUniformLocation(program, 'texture_bs'), 0);
         };
-        image.src = '/common/bs_texture_halfFace.png';
+        image.src = 'common/bs_texture_halfFace.png';
 }
 async function setupVertsBuffers() {
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -396,7 +468,7 @@ async function setupVertsBuffers() {
 }
 
 async function newVideoTask() {
-    await videoProcessor.init("/assets/01.mp4", "/assets/combined_data.json.gz");
+    await videoProcessor.init("assets/01.mp4", "assets/combined_data.json.gz");
     // 加载 combined_data.json.gz
     await loadCombinedData();
     await init_gl();
@@ -486,11 +558,7 @@ function render(mat_world, subPoints, bsArray) {
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels_fbo);
 }
 
-let dhLoadingProgress = 0
 
-var getDhLoadingProgress = () => {
-  return dhLoadingProgress
-}
 
 async function processVideoFrames() {
     if (isPaused) {
@@ -500,16 +568,25 @@ async function processVideoFrames() {
     // 检查视频帧是否已经解码完成
     if (videoProcessor.videoFrames.length === 0 || videoProcessor.videoFrames.length < videoProcessor.nbSampleTotal) {
         console.log('Waiting for video frames to load...', videoProcessor.videoFrames.length, videoProcessor.nbSampleTotal);
-      dhLoadingProgress = videoProcessor.videoFrames.length / videoProcessor.nbSampleTotal
         setTimeout(processVideoFrames, 100); // 等待100毫秒后再次检查
         return;
     }
     if (frameIndex >= videoProcessor.videoFrames.length) {
         frameIndex = 0; // 重新开始
     }
-  dhLoadingProgress = 1
-    const { img, duration, timestamp } = videoProcessor.videoFrames[frameIndex];
-    ctx_video.drawImage(img, 0, 0, canvas_video.width, canvas_video.height);
+
+    if (tag_ios17)
+    {
+        const { blob, duration, timestamp } = videoProcessor.videoFrames[frameIndex];
+        const img = await createImageBitmap(blob);
+        ctx_video.drawImage(img, 0, 0, canvas_video.width, canvas_video.height);
+        img.close(); // 及时释放内存
+    }
+    else
+    {
+        const { img, duration, timestamp } = videoProcessor.videoFrames[frameIndex];
+        ctx_video.drawImage(img, 0, 0, canvas_video.width, canvas_video.height);
+    }
 
     // 计算并显示FPS
     if (fps_enabled) {

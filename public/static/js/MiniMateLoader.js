@@ -1,5 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
-  init();
+  try{
+    init();
+
+  }
+  catch (e){
+    console.log("ERROR: " + e);
+  }
 });
 
 async function init()

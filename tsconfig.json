@@ -11,11 +11,6 @@
       "path": "./tsconfig.vitest.json"
     }
   ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.vue",
-    "src/**/*.d.ts"
-  ],
   "exclude": [
     "node_modules"
   ],
@@ -24,9 +19,23 @@
     "esnext"
   ],
   "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,
+    "allowJs": true,
+    "jsx": "preserve",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": [
+      "esnext",
+      "dom"
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   }
 }
