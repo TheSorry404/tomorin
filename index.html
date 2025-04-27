@@ -11,11 +11,11 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
   <script>
-    document.body.style.overflow = 'hidden'
-    document.querySelector('input').addEventListener('focus', (e) => {
-      // 禁止页面缩放
-      document.body.style.zoom = '1'
-    })
+    // document.body.style.overflow = 'hidden'
+    // document.querySelector('input').addEventListener('focus', (e) => {
+    // 禁止页面缩放
+    // document.body.style.zoom = '1'
+    // })
     window.addEventListener('focus', () => {
       document.body.style.zoom = '1'
     })
@@ -28,6 +28,7 @@
       }
   </style>
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/pannellum.css">
 </head>
 
 <body>
@@ -36,8 +37,11 @@
 </body>
 
 <!--<script-->
-<!--  src="https://localhost:8000/google_map.js"-->
+<!--  async-->
+<!--  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCJyCM4bvCXflPBgHwYSc-DU5J3LRc3OGU&callback=map_initialize&v=weekly"-->
 <!--  defer-->
 <!--&gt;</script>-->
 
+<!-- Pannellum JS -->
+<script src="/static/pannellum.js"></script>
 </html>

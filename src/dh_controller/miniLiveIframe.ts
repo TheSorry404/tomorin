@@ -9,7 +9,7 @@ export function useMiniLiveIframe() {
   let isDragging = false
   let startX = 0,
     startY = 0
-  let initialLeft = 0,
+  let initialRightStyle = 0,
     initialTop = 0
 
   const getClientX = (e: MouseEvent | TouchEvent) => {
@@ -37,8 +37,8 @@ export function useMiniLiveIframe() {
     startX = getClientX(e)
     startY = getClientY(e)
 
+    initialRightStyle = parseFloat(window.getComputedStyle(el).right)
     const rect = el.getBoundingClientRect()
-    initialLeft = rect.left
     initialTop = rect.top
 
     document.addEventListener('mousemove', onDragging)
@@ -53,7 +53,7 @@ export function useMiniLiveIframe() {
 
     const dx = getClientX(e) - startX
     const dy = getClientY(e) - startY
-    iframeContainer.value.style.left = `${initialLeft + dx}px`
+    iframeContainer.value.style.right = `${initialRightStyle - dx}px`
     iframeContainer.value.style.top = `${initialTop + dy}px`
   }
 
@@ -70,27 +70,23 @@ export function useMiniLiveIframe() {
     if (el) {
       const rect = el.getBoundingClientRect()
       const outOfBounds =
-        rect.left < 0 ||
+        rect.right < 0 ||
         rect.top < 0 ||
         rect.right > window.innerWidth ||
         rect.bottom > window.innerHeight
 
       if (outOfBounds) {
-        const el = iframeContainer.value
-        if (el) {
-          const rect = el.getBoundingClientRect()
-          const margin = 10 // Distance from the edge
-          const newTop = Math.min(
-            Math.max(rect.top, margin),
-            window.innerHeight - rect.height - margin,
-          )
-          const newLeft = Math.min(
-            Math.max(rect.left, margin),
-            window.innerWidth - rect.width - margin,
-          )
-          el.style.top = `${newTop}px`
-          el.style.left = `${newLeft}px`
-        }
+        const margin = 10 // Distance from the edge
+        const newTop = Math.min(
+          Math.max(rect.top, margin),
+          window.innerHeight - rect.height - margin,
+        )
+        const newRight = Math.min(
+          Math.max(rect.right, margin),
+          window.innerWidth - rect.width - margin,
+        )
+        el.style.top = `${newTop}px`
+        el.style.right = `${window.innerWidth - newRight}px`
       }
     }
   }
@@ -107,7 +103,7 @@ export function useMiniLiveIframe() {
     if (!el) return
     el.style.position = 'fixed'
     el.style.top = '40px'
-    el.style.left = '20px'
+    el.style.right = '20px'
     el.style.zIndex = '9999'
 
     window.addEventListener('message', handleMessage)
@@ -115,10 +111,6 @@ export function useMiniLiveIframe() {
 
   onUnmounted(() => {
     window.removeEventListener('message', handleMessage)
-  })
-
-  onUnmounted(() => {
-    // remove any future message or event listeners if needed
   })
 
   return {

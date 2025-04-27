@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import type { CSSProperties } from 'vue'
+if (typeof VideoDecoder !== 'undefined') {
+  // 使用 VideoDecoder 正常播放
+} else {
+  console.error('VideoDecoder not supported on this browser.')
+  alert('您当前的浏览器不支持VideoDecoder，请使用Chrome或Edge浏览器')
+  // firefox
+}
+
+import { type CSSProperties, nextTick } from 'vue'
 
 declare const google: any
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
@@ -7,27 +15,89 @@ import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from '@/utils/MicRecorder'
-import { backendUrl, blobToBase64 } from '@/utils/Global'
+import {
+  backendUrl,
+  blobToBase64,
+  getPosition,
+  type Pannellum,
+  type Position,
+} from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
-import { Camera } from '@/camera_controller/Camera'
+import { GoogleCamera } from '@/camera_controller/GoogleCamera.ts'
+import PannellumView from '@/components/PannellumView.vue'
+import { positionValues } from 'vuetify/lib/composables/position'
 
 /**
  * 数字人
  */
 const { iframeSrc, iframeContainer, iframeWidth, iframeHeight, onDragStart } = useMiniLiveIframe()
-// const unityContext = new UnityWebgl({
-//   loaderUrl: 'https://acacos-cdn.syan.wang/WebGL.loader.js',
-//   dataUrl: 'https://acacos-cdn.syan.wang/WebGL.data',
-//   frameworkUrl: 'https://acacos-cdn.syan.wang/WebGL.framework.js',
-//   codeUrl: 'https://acacos-cdn.syan.wang/WebGL.wasm',
-// })
-// // Check before release, if in need it could be a OSS/COS address
 
-// unityContext.addUnityListener('gameStart', (msg) => {
-//   alert(msg)
-//   console.log('gameStart : ', msg)
-// })
-/// 和iframe通信
+/**
+ * 全景图
+ */
+
+const panorama_map = ref<HTMLDivElement | null>(null)
+let viewer: Pannellum
+
+onMounted(async () => {
+  const positions: Position[] = await getPosition()
+  const config: {
+    default: { firstScene: string; sceneFadeDuration: number }
+    scenes: {
+      default: {
+        type: string
+        panorama: string
+        yaw: number
+        pitch: number
+        hfov: number
+        autoLoad: boolean
+        deviceOrientationControls: boolean
+      }
+    }
+  } = {
+    default: {
+      firstScene: 'default',
+      sceneFadeDuration: 1000, // 场景切换过渡时间（毫秒）
+    },
+    scenes: {
+      default: {
+        type: 'equirectangular',
+        panorama: '/img/scene/封面.jpg', // 替换为第一张全景图路径
+        yaw: 0, // 初始水平视角
+        pitch: 40.86, // 初始垂直视角
+        hfov: 80,
+        autoLoad: true,
+        deviceOrientationControls: true,
+      },
+    },
+  }
+  for (const position of positions) {
+    config['scenes'][position.id] = {
+      type: 'equirectangular',
+      panorama: position.img,
+      yaw: 0, // 初始水平视角
+      pitch: 0, // 初始垂直视角
+      autoLoad: true,
+    }
+  }
+  console.log(config)
+  viewer = window.pannellum.viewer(panorama_map.value, config)
+})
+
+interface Window {
+  pannellum: Pannellum
+  innerWidth: number
+}
+
+const moveToByAction = async (action: string) => {
+  const positions: Position[] = await getPosition()
+  console.log(positions)
+  for (const pos of positions) {
+    if (pos.action === action) {
+      viewer.loadScene(pos.id, 0, 0, 70)
+    }
+  }
+}
 
 /**
  * 遮罩层
@@ -94,7 +164,7 @@ const stopRecording = async () => {
         position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
         jumpFun: () => {
           console.log('跳转到:', data['suggestion'])
-          camera.moveTo(data['suggestion'])
+          moveToByAction(data['suggestion'])
         },
       }).then()
     }
@@ -152,7 +222,7 @@ const sendTextMessage = async () => {
           showSnackbar({
             position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
             jumpFun: () => {
-              camera.moveTo(data['suggestion'])
+              moveToByAction(data['suggestion'])
               snackbar.value = false
             },
           }).then()
@@ -172,18 +242,28 @@ const sendTextMessage = async () => {
 /**
  * 推荐显示窗
  * */
-const recommendationImages = [
-  { src: '/img/售票处.jpg', label: '售票处', action: 'go_shoupiaochu' },
-  { src: '/img/文昌阁.jpg', label: '文昌阁', action: 'go_wenchangge' },
-  { src: '/img/昆明湖.jpg', label: '昆明湖', action: 'go_kunminghu' },
-  { src: '/img/画中游.jpg', label: '画中游', action: 'go_huazhongyou' },
-  { src: '/img/长廊.jpg', label: '长廊', action: 'go_changlang' },
-  // {src:'/img/敬请期待.svg',label:'到底啦~'},
+const recommendationImages: Position[] = [
+  // { src: '/img/售票处.jpg', label: '售票处', action: 'go_shoupiaochu' },
+  // { src: '/img/文昌阁.jpg', label: '文昌阁', action: 'go_wenchangge' },
+  // { src: '/img/昆明湖.jpg', label: '昆明湖', action: 'go_kunminghu' },
+  // { src: '/img/画中游.jpg', label: '画中游', action: 'go_huazhongyou' },
+  // { src: '/img/长廊.jpg', label: '长廊', action: 'go_changlang' },
+  // // {src:'/img/敬请期待.svg',label:'到底啦~'},
 ]
+
+const loadRecommendation = async () => {
+  const positions = await getPosition()
+  for (let pos of positions) {
+    recommendationImages.push(pos)
+  }
+  console.log('推荐:', recommendationImages)
+}
+
+loadRecommendation()
 
 const handleRecommendationClick = (action: string) => {
   console.log('执行操作：', action)
-  camera.moveTo(action)
+  viewer.loadScene(action, 0, 0, 70)
 }
 
 /**
@@ -220,7 +300,7 @@ const showSnackbar = async ({ position, jumpFun }: { position: string; jumpFun: 
 const googleMap = ref<HTMLElement | null>(null)
 // const positions = getPosition()
 // console.log("POSITION:",positions)
-const camera = new Camera()
+const camera = new GoogleCamera()
 console.log('camera', camera)
 const initialize = () => {
   const fenway = { lat: 39.9999819, lng: 116.2754613 }
@@ -238,16 +318,6 @@ const initialize = () => {
     zoomControl: false,
   })
 }
-
-declare global {
-  interface Window {
-    google: any
-    map_initialize: () => void
-  }
-}
-
-// 向外暴露函数
-window.map_initialize = initialize
 
 const isMobile = ref(false)
 
@@ -283,9 +353,15 @@ const imageStyle = computed(() => {
 
 <template>
   <!--  Google视窗 fixed-->
+  <!--  <div-->
+  <!--    style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"-->
+  <!--    ref="googleMap"-->
+  <!--  ></div>-->
+
+  <!-- 全景视窗 fixed-->
   <div
     style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"
-    ref="googleMap"
+    ref="panorama_map"
   ></div>
 
   <!--  Unity视窗 fixed-->
@@ -293,7 +369,7 @@ const imageStyle = computed(() => {
   <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
   <!--  </div>-->
 
-  <!--  数字人窗口  -->
+<!--  数字人窗口-->
   <div ref="iframeContainer" class="draggable-container" style="z-index: 2">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
@@ -364,17 +440,17 @@ const imageStyle = computed(() => {
                   v-for="(img, index) in recommendationImages"
                   :key="index"
                   class="image-item"
-                  @click="handleRecommendationClick(img.action)"
+                  @click="moveToByAction(img.action)"
                 >
                   <v-img
-                    :src="img.src"
-                    :alt="img.label"
+                    :src="img.recommend_picture"
+                    :alt="img.name"
                     :style="imageStyle"
                     cover
                     class="hover-effect"
                   />
                   <p :style="textStyle">
-                    {{ img.label }}
+                    {{ img.name }}
                   </p>
                 </div>
               </v-slide-group>

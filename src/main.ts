@@ -11,7 +11,7 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import { backendUrl } from '@/utils/Global'
-
+// main.ts
 // Registering Syncfusion<sup style="font-size:70%">&reg;</sup> license key
 registerLicense(
   'Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCe0xyWmFZfVtgdV9CYlZVQ2Y/P1ZhSXxWdkFjXX5ddHZQR2FYUUF9XUs=',
@@ -30,10 +30,11 @@ app.use(vuetify)
 
 app.mount('#app');
 
-const script = document.createElement('script')
-script.src = `${backendUrl}/google_map.js `
-script.async = true
-script.defer = true
-document.head.appendChild(script)
+
+// const script = document.createElement('script')
+// script.src = `https://proxy.apricityx.top:8443/_proxy/maps.googleapis.com/maps/api/js?key=AIzaSyDKGVNBfdHh9_ZV9fVtHmfDiL12oxWFN1s&callback=map_initialize&v=weekly`
+// script.async = true
+// script.defer = true
+// document.head.appendChild(script)
 
 // createApp(App).mount('#app')

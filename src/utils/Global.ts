@@ -14,7 +14,7 @@ export const blobToBase64 = (blob: Blob) => {
   })
 }
 
-export const getPosition = async () => {
+export const getPosition: () => Promise<Position[]> = async () => {
   const url = `/positions.json`
   const headers = {
     'Content-Type': 'application/json',
@@ -36,4 +36,47 @@ export const getPosition = async () => {
     .catch((error) => {
       console.error('There was a problem with the fetch operation:', error)
     })
+}
+
+
+interface scene {
+  type: string
+  panorama: string
+  yaw: number
+  pitch: number
+}
+
+export interface Position {
+  id: string
+  name: string
+  latitude: number
+  longitude: number
+  action: string
+  img: string
+  recommend_picture: string
+}
+
+export interface Config {
+  default: {
+    firstScene: string
+    sceneFadeDuration: number
+  }
+  scenes: {
+    [scene: string]: {
+      type: string
+      panorama: string
+      yaw: number
+      pitch: number
+      deviceOrientationControls: boolean
+    }
+  }
+}
+
+
+export interface Pannellum {
+  loadScene(sceneId: string, pitch: number, yaw: number, hfov: number): Pannellum
+
+  addScene(sceneI: string, config: scene): Pannellum
+
+  viewer(container: HTMLElement, config: Config): Pannellum
 }
