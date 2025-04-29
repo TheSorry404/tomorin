@@ -32,7 +32,7 @@ app.mount('#app');
 
 
 // const script = document.createElement('script')
-// script.src = `https://proxy.apricityx.top:8443/_proxy/maps.googleapis.com/maps/api/js?key=AIzaSyDKGVNBfdHh9_ZV9fVtHmfDiL12oxWFN1s&callback=map_initialize&v=weekly`
+
 // script.async = true
 // script.defer = true
 // document.head.appendChild(script)
