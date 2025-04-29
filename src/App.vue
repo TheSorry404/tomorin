@@ -360,7 +360,7 @@ const imageStyle = computed(() => {
 
   <!-- 全景视窗 fixed-->
   <div
-    style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"
+    style="height: 100%; width: 100%; position: fixed; top: 0; left: 0; z-index: 1"
     ref="panorama_map"
   ></div>
 
@@ -390,7 +390,7 @@ const imageStyle = computed(() => {
     <v-alert style="z-index: 10000" v-if="isRecording" variant="tonal" type="warning" height="50px">
       <span style="margin-left: 10px">说话中...</span>
     </v-alert>
-    <v-tabs v-model="tab" bg-color="black" height="30px">
+    <v-tabs v-model="tab" bg-color="black" height="30px" align-tabs="center" grow>
       <v-tab value="one">语音</v-tab>
       <v-tab value="two">文字</v-tab>
       <v-tab value="three">推荐</v-tab>
