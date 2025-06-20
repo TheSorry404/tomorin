@@ -7,11 +7,10 @@ if (typeof VideoDecoder !== 'undefined') {
   // firefox
 }
 
-import { type CSSProperties, nextTick } from 'vue'
+import { type CSSProperties } from 'vue'
 
 declare const google: any
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
-// import UnityWebgl from 'unity-webgl'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
 import MicRecorder from '@/utils/MicRecorder'
@@ -23,9 +22,6 @@ import {
   type Position,
 } from '@/utils/Global'
 import { computed, onMounted, ref } from 'vue'
-import { GoogleCamera } from '@/camera_controller/GoogleCamera.ts'
-import PannellumView from '@/components/PannellumView.vue'
-import { positionValues } from 'vuetify/lib/composables/position'
 
 /**
  * 数字人
@@ -40,7 +36,7 @@ const panorama_map = ref<HTMLDivElement | null>(null)
 let viewer: Pannellum
 
 onMounted(async () => {
-  const positions: Position[] = await getPosition()
+  const positions = await getPosition()
   const config: {
     default: { firstScene: string; sceneFadeDuration: number }
     scenes: {
@@ -74,14 +70,14 @@ onMounted(async () => {
   for (const position of positions) {
     config['scenes'][position.id] = {
       type: 'equirectangular',
-      panorama: position.img,
+      panorama: `${backendUrl}/${position.img}`,
       yaw: 0, // 初始水平视角
       pitch: 0, // 初始垂直视角
       autoLoad: true,
     }
   }
-  console.log(config)
-  viewer = window.pannellum.viewer(panorama_map.value, config)
+  console.log('config:', config)
+  viewer = window.pannellum.viewer(panorama_map.value as HTMLElement, config)
 })
 
 interface Window {
@@ -253,7 +249,7 @@ const recommendationImages: Position[] = [
 
 const loadRecommendation = async () => {
   const positions = await getPosition()
-  for (let pos of positions) {
+  for (const pos of positions) {
     recommendationImages.push(pos)
   }
   console.log('推荐:', recommendationImages)
@@ -279,44 +275,12 @@ const jumping = ref(() => {})
 //   )
 // }
 const showSnackbar = async ({ position, jumpFun }: { position: string; jumpFun: () => void }) => {
-  if (position === 'None') {
-    console.log('建议为空')
+  if (position === 'None' || position.includes('Error')) {
+    console.log('建议为空或者请求出错')
     return
-  }
-  const positions = camera.POSITIONS
-  for (let pos of positions) {
-    if (pos.action === position) {
-      suggested_position.value = pos.name
-      break
-    }
   }
   jumping.value = jumpFun
   snackbar.value = true
-}
-
-/**
- * Google
- * */
-const googleMap = ref<HTMLElement | null>(null)
-// const positions = getPosition()
-// console.log("POSITION:",positions)
-const camera = new GoogleCamera()
-console.log('camera', camera)
-const initialize = () => {
-  const fenway = { lat: 39.9999819, lng: 116.2754613 }
-  camera.map = new google.maps.StreetViewPanorama(googleMap.value, {
-    position: fenway,
-    pov: {
-      heading: 0,
-      pitch: 0,
-    },
-    linksControl: true,
-    panControl: false,
-    enableCloseButton: false,
-    fullscreenControl: false,
-    addressControl: false,
-    zoomControl: false,
-  })
 }
 
 const isMobile = ref(false)
@@ -352,11 +316,6 @@ const imageStyle = computed(() => {
 </style>
 
 <template>
-  <!--  Google视窗 fixed-->
-  <!--  <div-->
-  <!--    style="height: 100%; width: 100%; position: absolute; top: 0; left: 0; z-index: 1"-->
-  <!--    ref="googleMap"-->
-  <!--  ></div>-->
 
   <!-- 全景视窗 fixed-->
   <div
@@ -364,12 +323,7 @@ const imageStyle = computed(() => {
     ref="panorama_map"
   ></div>
 
-  <!--  Unity视窗 fixed-->
-  <!--  <div style="height: 100%; width: 100%; position: absolute; top: 0; left: 0">-->
-  <!--    <UnityVue :unity="unityContext" tabindex="0" />-->
-  <!--  </div>-->
-
-<!--  数字人窗口-->
+  <!--  数字人窗口-->
   <div ref="iframeContainer" class="draggable-container" style="z-index: 2">
     <div class="drag-overlay" @mousedown="onDragStart" @touchstart="onDragStart"></div>
     <iframe
@@ -417,7 +371,7 @@ const imageStyle = computed(() => {
           <v-card>
             <v-text-field
               v-model="message"
-              label="请输入..."
+              label="与智能体对话..."
               variant="filled"
               auto-grow
               :loading="textFieldLoading || isQuerying"
@@ -443,7 +397,7 @@ const imageStyle = computed(() => {
                   @click="moveToByAction(img.action)"
                 >
                   <v-img
-                    :src="img.recommend_picture"
+                    :src="`${backendUrl}/${img.recommend_picture}`"
                     :alt="img.name"
                     :style="imageStyle"
                     cover

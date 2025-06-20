@@ -70,13 +70,14 @@ export function useMiniLiveIframe() {
     if (el) {
       const rect = el.getBoundingClientRect()
       const outOfBounds =
-        rect.right < 0 + 101.5 ||
+        rect.right < 0 ||
         rect.top < 0 ||
-        rect.left > window.innerWidth - 101.5 ||
+        rect.left > window.innerWidth ||
         rect.bottom > window.innerHeight
 
       if (outOfBounds) {
         const el = iframeContainer.value
+        if (!el) return
         const rect = el.getBoundingClientRect()
         const margin = 10 // Distance from the edge
         const newTop = Math.min(
@@ -88,16 +89,11 @@ export function useMiniLiveIframe() {
           // window.innerWidth - rect.width - margin,
           rect.width + margin,
         )
-        console.log('newRight', newRight)
         let realRight = 0
         if (newRight === 10) {
           realRight = window.innerWidth - rect.width - margin
         } else {
-          if (newRight <= 101.5) {
-            realRight = window.innerWidth - rect.width - margin
-          } else {
-            realRight = margin
-          }
+          realRight = margin
         }
         el.style.top = `${newTop}px`
         el.style.right = `${realRight}px`

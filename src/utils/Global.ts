@@ -1,4 +1,5 @@
-export const backendUrl = 'https://virtour.apricityx.top:8000'
+// export const backendUrl = 'https://virtour.apricityx.top:8002'
+export const backendUrl = 'https://127.0.0.1:8000'
 
 export const blobToBase64 = (blob: Blob) => {
   return new Promise((resolve, reject) => {
@@ -15,7 +16,7 @@ export const blobToBase64 = (blob: Blob) => {
 }
 
 export const getPosition: () => Promise<Position[]> = async () => {
-  const url = `/positions.json`
+  const url = `${backendUrl}/assets/positions.json`
   const headers = {
     'Content-Type': 'application/json',
   }
