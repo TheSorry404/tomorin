@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { id2name } from '@/utils/PositionTranslator.ts'
+
 if (typeof VideoDecoder !== 'undefined') {
   // 使用 VideoDecoder 正常播放
 } else {
@@ -9,7 +11,6 @@ if (typeof VideoDecoder !== 'undefined') {
 
 import { type CSSProperties } from 'vue'
 
-declare const google: any
 import { useMiniLiveIframe } from '@/dh_controller/miniLiveIframe'
 import DigitalHuman from '@/dh_controller/controller.ts'
 import { getAndPlayAudio } from '@/dh_controller/audio.ts'
@@ -85,14 +86,9 @@ interface Window {
   innerWidth: number
 }
 
-const moveToByAction = async (action: string) => {
-  const positions: Position[] = await getPosition()
-  console.log(positions)
-  for (const pos of positions) {
-    if (pos.action === action) {
-      viewer.loadScene(pos.id, 0, 0, 70)
-    }
-  }
+const moveToById = async (id: string) => {
+  console.log("Moving to position with ID:", id)
+  viewer.loadScene(id, 0, 0, 70)
 }
 
 /**
@@ -157,11 +153,8 @@ const stopRecording = async () => {
     console.log('Suggestions:', data)
     if (data['suggestion'].length > 0) {
       showSnackbar({
-        position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
-        jumpFun: () => {
-          console.log('跳转到:', data['suggestion'])
-          moveToByAction(data['suggestion'])
-        },
+        position_name: await id2name(data['suggestion']), // 跳转到地方的位置 这里需要做一次翻译 将代号转换为具体的地点
+        position_id: data['suggestion'] as string,
       }).then()
     }
   })().then(() => {})
@@ -216,11 +209,8 @@ const sendTextMessage = async () => {
         console.log('Suggestions:', data)
         if (data['suggestion'].length > 0) {
           showSnackbar({
-            position: data['suggestion'], // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
-            jumpFun: () => {
-              moveToByAction(data['suggestion'])
-              snackbar.value = false
-            },
+            position_name: await id2name(data['suggestion']), // 跳转到地方的位置 这里可能需要做一次翻译 将代号转换为具体的地点
+            position_id: data['suggestion'],
           }).then()
         }
       })().then(() => {})
@@ -239,12 +229,7 @@ const sendTextMessage = async () => {
  * 推荐显示窗
  * */
 const recommendationImages: Position[] = [
-  // { src: '/img/售票处.jpg', label: '售票处', action: 'go_shoupiaochu' },
-  // { src: '/img/文昌阁.jpg', label: '文昌阁', action: 'go_wenchangge' },
-  // { src: '/img/昆明湖.jpg', label: '昆明湖', action: 'go_kunminghu' },
-  // { src: '/img/画中游.jpg', label: '画中游', action: 'go_huazhongyou' },
-  // { src: '/img/长廊.jpg', label: '长廊', action: 'go_changlang' },
-  // // {src:'/img/敬请期待.svg',label:'到底啦~'},
+
 ]
 
 const loadRecommendation = async () => {
@@ -266,20 +251,21 @@ const handleRecommendationClick = (action: string) => {
  * 提示
  * */
 const snackbar = ref(false)
-const suggested_position = ref('')
-const jumping = ref(() => {})
+const suggested_position_name = ref('')
+const suggested_position_id = ref('')
 // const suggested_position_name = ref('')
 // const loadSuggestion = async () => {
 //   suggested_position_name.value = (await getPosition()).find(
 //     (item) => item.action === suggested_position,
 //   )
 // }
-const showSnackbar = async ({ position, jumpFun }: { position: string; jumpFun: () => void }) => {
-  if (position === 'None' || position.includes('Error')) {
+const showSnackbar = async ({ position_name, position_id }: { position_name: string; position_id: string }) => {
+  if (position_name === 'None' || position_id.includes('Error')) {
     console.log('建议为空或者请求出错')
     return
   }
-  jumping.value = jumpFun
+  suggested_position_name.value = position_name
+  suggested_position_id.value = position_id
   snackbar.value = true
 }
 
@@ -316,7 +302,6 @@ const imageStyle = computed(() => {
 </style>
 
 <template>
-
   <!-- 全景视窗 fixed-->
   <div
     style="height: 100%; width: 100%; position: fixed; top: 0; left: 0; z-index: 1"
@@ -348,6 +333,7 @@ const imageStyle = computed(() => {
       <v-tab value="one">语音</v-tab>
       <v-tab value="two">文字</v-tab>
       <v-tab value="three">推荐</v-tab>
+      <v-tab value="four">设置</v-tab>
     </v-tabs>
 
     <v-card-text>
@@ -394,7 +380,7 @@ const imageStyle = computed(() => {
                   v-for="(img, index) in recommendationImages"
                   :key="index"
                   class="image-item"
-                  @click="moveToByAction(img.action)"
+                  @click="moveToById(img.id)"
                 >
                   <v-img
                     :src="`${backendUrl}/${img.recommend_picture}`"
@@ -414,12 +400,19 @@ const imageStyle = computed(() => {
             </p>
           </v-card>
         </v-tabs-window-item>
+        <v-tabs-window-item value="four">
+          <v-card>
+            <v-card-text>
+              <p>设置功能待开发...</p>
+            </v-card-text>
+          </v-card>
+        </v-tabs-window-item>
       </v-tabs-window>
     </v-card-text>
   </v-card>
   <v-snackbar v-model="snackbar" style="z-index: 100000">
-    <p>建议前往 {{ suggested_position }}</p>
-    <v-btn variant="text" style="width: 100%" @click="jumping">带我去吧</v-btn>
+    <p>建议前往 {{ suggested_position_name }}</p>
+    <v-btn variant="text" style="width: 100%" @click="moveToById(suggested_position_id)">带我去吧</v-btn>
     <template v-slot:actions>
       <v-btn color="pink" variant="text" @click="snackbar = false">忽略</v-btn>
     </template>

@@ -15,12 +15,19 @@ export const blobToBase64 = (blob: Blob) => {
   })
 }
 
+let positions: Position[] = []
+
 export const getPosition: () => Promise<Position[]> = async () => {
+  if (positions.length > 0) {
+    console.log("Hit! Using cached positions.")
+    return positions
+  }
+  console.log("Miss! Fetching positions from backend.")
   const url = `${backendUrl}/assets/positions.json`
   const headers = {
     'Content-Type': 'application/json',
   }
-  return await fetch(url, {
+  positions = await fetch(url, {
     method: 'GET',
     headers: headers,
   })
@@ -37,8 +44,8 @@ export const getPosition: () => Promise<Position[]> = async () => {
     .catch((error) => {
       console.error('There was a problem with the fetch operation:', error)
     })
+  return positions
 }
-
 
 interface scene {
   type: string
@@ -72,7 +79,6 @@ export interface Config {
     }
   }
 }
-
 
 export interface Pannellum {
   loadScene(sceneId: string, pitch: number, yaw: number, hfov: number): Pannellum
